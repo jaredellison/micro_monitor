@@ -8,7 +8,17 @@ At some point it might be interesting to combine both these functions into a sin
 
 ## How to use:
 
-Open two terminal windows. In the one for sending data, run the attached 
+Open two terminal windows. In the one for sending data, run the following command:
+
+```
+python sendmsg.py
+```
+
+In the one to receive data run this command and select the same serial port.
+
+```
+python -m serial.tools.miniterm
+```
 
 
 

@@ -25,7 +25,11 @@ while True:
   if representsInt(selection) and int(selection) in range(1, len(available_ports) + 1):
     print('Port selection: ' + port.device + ' ' + port.manufacturer)
     selected_port = available_ports[int(selection) - 1]
-    ser = serial.Serial(selected_port.device, 9600)
+    serSend_path = selected_port.device
+    ser = serial.Serial(serSend_path, 9600)
+    # serReturn_path = 'tty'.join(serSend_path.split('cu'))
+    # print('return path: ' + serReturn_path)
+    # serReturn = serial.Serial(serReturn_path, 9600)
     print('Serial port connection opened at 9600 baud')
     break
   else:
@@ -37,11 +41,12 @@ def serialout(string):
     string = string+'\n'
     ser.write(string.encode())
 
-# # Wait for a command and send it to the serial port
 while True:
+  # while ser.in_waiting:  # Or: while ser.inWaiting():
+  #     print(ser.readline().decode('utf-8').strip())
+  #     print(ser.in_waiting)
   command_in = input('> ')
   if command_in[0] == '!':
     exec(command_in[1:])
   else:
     serialout(command_in)
-

@@ -1,7 +1,3 @@
----
-typora-root-url: ../micro_monitor
----
-
 # micro_monitor.py
 
 This project is a command line serial monitor utility intended to replace the Arduino IDE serial monitor with a quick and lightweight command line tool.

@@ -55,7 +55,6 @@ screen = curses.initscr()
 
 receivedBuffer = ['message 1', 'message 2', 'message 3', 'message 4', 'message 5', 'message 6']
 
-
 # Press escape key to exit
 q = ''
 
@@ -72,11 +71,13 @@ while q != 'ESC':
   # Note that coordinates appear in the order y,x not x,y
   dims = {'x': screen.getmaxyx()[1], 'y': screen.getmaxyx()[0]}
 
-  # Create a divider string to separate the screen
-  divider = '~' * dims['x']
-  divider_position = int(dims['y']/2)
+  # Create section dividers to separate the screen
+  send_divider = '◦ send:      ' + '▔' * (dims['x'] - 13)
+  receive_divider = '◦ receive:   ' + '▔' * (dims['x'] - 13)
+  mid_y = math.floor(int(dims['y']/2))
 
-  screen.addstr(divider_position, 0, divider)
+  screen.addstr(0, 0, send_divider)
+  screen.addstr(mid_y, 0, receive_divider)
 
   # Draw messages received from serial port
   receiveArea = {'start': int(dims['y']/2 + 1), 'lines': dims['y'] - int(dims['y']/2 + 1)}

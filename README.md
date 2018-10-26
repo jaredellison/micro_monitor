@@ -1,6 +1,6 @@
 # Python Serial
 
-This directory encludes python tools to send and receive serial data for developing and debugging code on teensy microcontrollers. It is intended to help replace the arduino IDE.
+This directory encludes python tools to send and receive serial data for developing and debugging code on teensy microcontrollers. It is intended to help replace the Arduino IDE serial monitor with a quicker lighter weight command line tool.
 
 The general idea is to open two terminal windows to work in: one for sending information, the other for receiving it. 
 

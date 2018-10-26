@@ -1,82 +1,55 @@
-# Python Serial
+# micro_monitor.py
 
-This directory encludes python tools to send and receive serial data for developing and debugging code on teensy microcontrollers. It is intended to help replace the Arduino IDE serial monitor with a quicker lighter weight command line tool.
+This project is a command line serial monitor utility intended to replace the Arduino IDE serial monitor with a quick and lightweight command line tool.
 
-The general idea is to open two terminal windows to work in: one for sending information, the other for receiving it. 
+The project is built with Python 3, it uses the [pySerial library](https://github.com/pyserial/) to identify and communicate with serial ports, and it uses the python [Curses library](https://docs.python.org/3/library/curses.html#module-curses) to render a simple text based user interface in a terminal window.
 
-At some point it might be interesting to combine both these functions into a single window command line GUI type application.
+This script has been tested using Mac OS and Linux but it may work for Windows as well.
 
-## How to use:
+## Installation
 
-Open two terminal windows. In the one for sending data, run the following command:
+Python 3 and the pip package manager are required, if you don't have them, learn how to install them [here](https://docs.python-guide.org/starting/installation/).
 
-```
-python sendmsg.py
-```
-
-In the one to receive data run this command and select the same serial port.
-
-```
-python -m serial.tools.miniterm
-```
-
-
-
-## Dependencies:
-
-Python 3.7.0
-
-https://github.com/pyserial/pyserial
-
-## Basis:
-
-### Figuring Out Which Serial Port To Use:
-
-Run the terminal command
+Before using micro_monitor, use pip install the dependences:
 
 ```bash
-ls /dev/tty.usb*
+pip install -r requirements.txt
 ```
 
-For example the serial port for a teensy 3.2 was: `/dev/cu.usbmodem4091371`
+If you like the tool, you may want to make it executable and save an alias for it in your system.
 
-The port `/dev/cu.usbmodem4091371` is used for sending data while the port `/dev/tty.usbmodem4091371`  is used for receiving data.
+## Using micro_monitor.py
 
-### Receiving Data:
+### Opening a connection
 
-Open miniterm.py by running the command:
+micro_monitor first checks for available serial ports. Because printers and other devices often appear in this list, it only searches for devices which include "usb" in their name. If one port exists, it is selected by default, if multiple ports exist you may select the desired one.
+
+Connections are opened at a baudrate of 9600 by default.
 
 ```bash
-python -m serial.tools.miniterm <serial port>
+One usb port available:
+ -> Port selection: /dev/cu.usbmodem4091371 Teensyduino
+ -> Serial port connection opened at 9600 baud
 ```
 
-### Sending Data:
+### The Monitor Window
 
-Open a serial port 
+Once a connection is available, press `return` to enter the serial monitor window. You may press the `escape` key to exit at any time.
 
-```python
-import serial
-ser = serial.Serial('/dev/cu.usbmodem4091371', 9600)
+The window is divided in half into send and receive sections.
 
-def serialout(string):
-    string = string+'\n'
-    ser.write(string.encode())
-```
+A prompt in the send section allows you to compose a string to send to the serial port. This prompt is very basic, only ascii characters are allowed but it is possible to type a simple command, use the `backspace` key and press `return` to send the command. 
 
+The receive section displays the most recently received messages from the serial port.
+
+The monitor window may be resized while the script runs. The most recently sent and recieved messages are always displayed.
 
 
-## Helpful links:
+## Acknowledgments and Resources
 
-The Python Serial Library: 
-https://media.readthedocs.org/pdf/pyserial/latest/pyserial.pdf
-
-
-
-Receiving Data from a serial port:
-
-https://arduino.stackexchange.com/questions/19002/use-unix-terminal-instead-of-the-monitor-on-arduino-ide
-
-
-
-Sending data to a serial port: 
-https://stackoverflow.com/questions/32018993/how-can-i-send-a-byte-array-to-a-serial-port-using-python
+* **pySerial**  - *Great documentation* - [pySerial Docs](https://pythonhosted.org/pyserial/)
+* **Python Curses Tutorial** - *A big picture introduction to Curses* - [Tutorial Videos](https://www.youtube.com/channel/UCXCA0fPu6uPjWv9p4uUrpEQ)
+* **Basics of communicating with serial ports in unix**
+  * [Receiving data](https://arduino.stackexchange.com/questions/19002/use-unix-terminal-instead-of-the-monitor-on-arduino-ide)
+  * [Sending data](https://stackoverflow.com/questions/32018993/how-can-i-send-a-byte-array-to-a-serial-port-using-python)
+* **Handling special characters in Curses** - *A very helpful function* - [The Developer's Cry Blog](http://devcry.heiho.net/html/2016/20160228-curses-practices.html)

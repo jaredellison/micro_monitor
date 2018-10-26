@@ -79,6 +79,7 @@ def assemble_to_send(char):
   # New Line
   # if char == 10:
   if char in ('\n', 'Ctrl-J'):
+    serial_out(send_message)
     sent_buffer.append(send_message)
     send_message = ''
     return
@@ -111,15 +112,27 @@ def draw_sent():
 
 # Test a single character to see if it is ascii
 def is_ascii(c):
-    return len(c) == 1 and 31 < ord(c) < 128
+  return len(c) == 1 and 31 < ord(c) < 128
 
 # A simple function to test if input strings are valid as integers
 def is_int(s):
-    try:
-        int(s)
-        return True
-    except ValueError:
-        return False
+  try:
+      int(s)
+      return True
+  except ValueError:
+      return False
+
+# Text is input to the script as a string, here we add a new line character
+# and endode it to binary and send it to the open serial port.
+def serial_out(string):
+  string = string+'\n'
+  ser.write(string.encode())
+
+# def receive_message():
+#   line = ser.readline()
+#   if line:
+#     received_buffer.append(line)
+
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
@@ -224,6 +237,8 @@ while True:
   mid_y = math.floor(int(dims['y']/2))
 
   draw_section_dividers()
+
+  # receive_message()
 
   draw_received()
 

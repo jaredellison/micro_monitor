@@ -9,9 +9,7 @@
 import curses
 import math
 from getch import getch as get_one_character
-# import time
 
-# import serial
 import serial
 from serial.tools import list_ports
 
@@ -129,47 +127,13 @@ def serial_out(string):
   string = string+'\n'
   ser.write(string.encode())
 
-# def receive_message():
-#   global ser
-#   line = ser.readline()
-#   if line:
-#     received_buffer.append(line.decode('utf-8').strip())
-#   return
-
 def receive_message():
   global ser
-  global reader
   if ser.in_waiting:
-    line = reader.readline()
+    line = ser.readline()
     if line:
       received_buffer.append(line.decode('utf-8').strip())
-      return
   return
-
-# Class from https://github.com/pyserial/pyserial/issues/216
-class ReadLine:
-    def __init__(self, s):
-        self.buf = bytearray()
-        self.s = s
-        print(s)
-
-    def readline(self):
-        i = self.buf.find(b"\n")
-        if i >= 0:
-            r = self.buf[:i+1]
-            self.buf = self.buf[i+1:]
-            return r
-        while True:
-            i = max(1, min(2048, self.s.in_waiting))
-            data = self.s.read(i)
-            i = data.find(b"\n")
-            if i >= 0:
-                r = self.buf + data[:i+1]
-                self.buf[0:] = data[i+1:]
-                return r
-            else:
-                self.buf.extend(data)
-
 
 def exit_gracefully():
   # Clear screen and exit
@@ -230,9 +194,6 @@ else:
       break
     else:
       print('Please enter a valid port number')
-
-# Create reader object based on serial port
-reader = ReadLine(ser)
 
 # Let users know how to quit
 print('\nPress escape key to exit at any time.   Press return to enter serial monitor.')

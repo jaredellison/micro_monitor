@@ -9,11 +9,9 @@
 
 import curses
 import math
-from getch import getch
-
 import serial
 from serial.tools import list_ports
-
+from getch import getch
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
@@ -25,7 +23,7 @@ from serial.tools import list_ports
 # This helps identify when escape key is pressed to exit the program
 def getch_curses():
   KEY_TABLE = {'0x1b': 'ESC'}
-  '''Returns keystroke as string'''
+  # Returns keystroke as string
 
   key = screen.getch()
 

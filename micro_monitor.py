@@ -128,15 +128,49 @@ def serial_out(string):
   string = string+'\n'
   ser.write(string.encode())
 
+# def receive_message():
+#   global ser
+#   # ser.in_waiting shows the number of bytes waiting to be read.
+#   # We only want to read them if they exist, otherwise the program will hang.
+#   if ser.in_waiting:
+#     line = ser.readline()
+#     if line:
+#       received_buffer.append(line.decode('utf-8').strip())
+#   return
+
 def receive_message():
   global ser
+  global reader
   # ser.in_waiting shows the number of bytes waiting to be read.
   # We only want to read them if they exist, otherwise the program will hang.
   if ser.in_waiting:
-    line = ser.readline()
+    line = reader.readline()
     if line:
       received_buffer.append(line.decode('utf-8').strip())
   return
+
+# Alternative readline implementation from: https://github.com/pyserial/pyserial/issues/216
+class ReadLine:
+    def __init__(self, s):
+        self.buf = bytearray()
+        self.s = s
+
+    def readline(self):
+        i = self.buf.find(b"\n")
+        if i >= 0:
+            r = self.buf[:i+1]
+            self.buf = self.buf[i+1:]
+            return r
+        while True:
+            i = max(1, min(2048, self.s.in_waiting))
+            data = self.s.read(i)
+            i = data.find(b"\n")
+            if i >= 0:
+                r = self.buf + data[:i+1]
+                self.buf[0:] = data[i+1:]
+                return r
+            else:
+                self.buf.extend(data)
 
 def exit_gracefully():
   # Clear screen and exit
@@ -201,6 +235,10 @@ else:
     else:
       print('Please enter a valid port number')
 
+# Create reader object using serial port
+reader = ReadLine(ser)
+
+
 # Let users know how to quit
 print('\nPress escape key to exit at any time.   Press return to enter serial monitor.')
 
@@ -219,8 +257,16 @@ while True:
 
 screen = curses.initscr()
 
+# Don't show characters on the screen as they're typed. Characters are
+# shown using the assemble_to_send() function.
 curses.noecho()
-screen.nodelay(True)
+
+# The function curses_getch() blocks the cpu waiting for input so it's
+# important to set a timeout value for the screen. 250 Milliseconds is the
+# default. If the value is set too low, the script REALLY uses the CPU and
+# the screen may flicker.
+screen.timeout(250)
+
 curses.cbreak()
 screen.keypad(True)
 

@@ -1,3 +1,7 @@
+---
+typora-root-url: ../micro_monitor
+---
+
 # micro_monitor.py
 
 This project is a command line serial monitor utility intended to replace the Arduino IDE serial monitor with a quick and lightweight command line tool.
@@ -40,15 +44,15 @@ The window is divided in half into send and receive sections.
 
 A prompt in the send section allows you to compose a string to send to the serial port. This prompt is very basic, only ascii characters are allowed but it is possible to type a simple command, use the `backspace` key and press `return` to send the command. 
 
-![micro_monitor_1](./img/micro_monitor_1.png)
+![micro_monitor_1](img/micro_monitor_1.png)
 
 The receive section displays the most recently received messages from the serial port.
 
-![micro_monitor_2](./img/micro_monitor_2.png)
+![micro_monitor_2](img/micro_monitor_2.png)
 
 The monitor window may be resized while the script runs. The most recently sent and recieved messages are always displayed.
 
-![micro_monitor_small](./img/micro_monitor_small.png)
+![micro_monitor_small](img/micro_monitor_small.png)
 
 
 
@@ -105,3 +109,4 @@ void establishContact() {
   * [Receiving data](https://arduino.stackexchange.com/questions/19002/use-unix-terminal-instead-of-the-monitor-on-arduino-ide)
   * [Sending data](https://stackoverflow.com/questions/32018993/how-can-i-send-a-byte-array-to-a-serial-port-using-python)
 * **Handling special characters in Curses** - *A very helpful function* - [The Developer's Cry Blog](http://devcry.heiho.net/html/2016/20160228-curses-practices.html)
+* **Alternative readline() implementation** - *This helps performance* - [User @skoehler's post](https://github.com/pyserial/pyserial/issues/216)

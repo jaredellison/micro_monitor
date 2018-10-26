@@ -259,7 +259,8 @@ curses.noecho()
 # The function curses_getch() blocks the cpu waiting for input so it's
 # important to set a timeout value for the screen. 250 Milliseconds is the
 # default. If the value is set too low, the script REALLY uses the CPU and
-# the screen may flicker.
+# the screen may flicker but setting it lower does mean that incoming bytes
+# are displayed quicker.
 screen.timeout(250)
 
 curses.cbreak()

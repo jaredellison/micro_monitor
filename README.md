@@ -58,7 +58,7 @@ The monitor window may be resized while the script runs. The most recently sent 
 
 ## Trying it out
 
-Because micro_monitor.py requires something to communicate with, a good example program for a microcontroller will send data to its serial port and then accept, process and return messages. As an example I've been using a program that translates incoming strings to uppercase. If you have an Arduino compatible microcontroller, you can use the following code:
+Because micro_monitor.py requires something to communicate with, a good example program for a microcontroller will send data to its serial port and then accept, process and return messages. As an example I've been using a program that translates incoming strings to uppercase. If you have an Arduino compatible microcontroller, you can use the following code, which is also included in the repository under `example_arduino_sketch/`:
 
 ```cpp
 int inByte = 0;         // incoming serial byte

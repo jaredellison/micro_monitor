@@ -69,6 +69,15 @@ def draw_received():
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
+##############################
+#                            #
+#      Global Variables      #
+#                            #
+##############################
+
+sendString = ''
+sentStrings = ['sent msg 1', 'sent msg 2', 'sent msg 3', 'sent msg 4']
+inputLine = 0
 
 ##############################
 #                            #
@@ -77,6 +86,10 @@ def draw_received():
 ##############################
 
 screen = curses.initscr()
+
+curses.noecho()
+curses.cbreak()
+screen.keypad(True)
 
 # Color Handling
 curses.start_color()
@@ -89,7 +102,7 @@ curses.use_default_colors()
 #   background color (-1 is the default color)
 curses.init_pair(1, curses.COLOR_BLUE, -1)
 
-received_buffer = ['message 1', 'message 2', 'message 3', 'message 4', 'message 5', 'message 6']
+received_buffer = ['received msg 1', 'received msg 2', 'received msg 3', 'received msg 4', 'received msg 5', 'received msg 6']
 
 # Press escape key to exit
 q = ''
@@ -101,7 +114,7 @@ q = ''
 #                            #
 ##############################
 
-while q != 'ESC':
+while True:
   screen.clear()
 
   # Get termianl dimensions
@@ -114,7 +127,9 @@ while q != 'ESC':
   draw_received()
 
   # Check for input characters
-  q = getch()
+  charInput = getch()
+  if charInput == 'ESC':
+    break
 
   # Draw all changes to the screen
   screen.refresh()
@@ -126,7 +141,12 @@ while q != 'ESC':
 #                            #
 ##############################
 
-
 # Clear screen and exit
+screen.clear()
+
+curses.nocbreak()
+screen.keypad(0)
+curses.echo()
+
 screen.clear()
 curses.endwin()

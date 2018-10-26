@@ -9,6 +9,7 @@
 import curses
 import math
 from getch import getch as get_one_character
+# import time
 
 # import serial
 import serial
@@ -129,10 +130,57 @@ def serial_out(string):
   ser.write(string.encode())
 
 # def receive_message():
+#   global ser
 #   line = ser.readline()
 #   if line:
-#     received_buffer.append(line)
+#     received_buffer.append(line.decode('utf-8').strip())
+#   return
 
+def receive_message():
+  global ser
+  global reader
+  if ser.in_waiting:
+    line = reader.readline()
+    if line:
+      received_buffer.append(line.decode('utf-8').strip())
+      return
+  return
+
+# Class from https://github.com/pyserial/pyserial/issues/216
+class ReadLine:
+    def __init__(self, s):
+        self.buf = bytearray()
+        self.s = s
+        print(s)
+
+    def readline(self):
+        i = self.buf.find(b"\n")
+        if i >= 0:
+            r = self.buf[:i+1]
+            self.buf = self.buf[i+1:]
+            return r
+        while True:
+            i = max(1, min(2048, self.s.in_waiting))
+            data = self.s.read(i)
+            i = data.find(b"\n")
+            if i >= 0:
+                r = self.buf + data[:i+1]
+                self.buf[0:] = data[i+1:]
+                return r
+            else:
+                self.buf.extend(data)
+
+
+def exit_gracefully():
+  # Clear screen and exit
+  screen.clear()
+
+  curses.nocbreak()
+  screen.keypad(0)
+  curses.echo()
+
+  screen.clear()
+  curses.endwin()
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
@@ -146,7 +194,6 @@ send_message = ''
 sent_buffer = ['sent msg 1', 'sent msg 2', 'sent msg 3', 'sent msg 4', 'sent msg 5', 'sent msg 6', 'sent msg 7', 'sent msg 8']
 inputLine = 0
 received_buffer = ['received msg 1', 'received msg 2', 'received msg 3', 'received msg 4', 'received msg 5', 'received msg 6']
-
 
 ##############################
 #                            #
@@ -178,14 +225,14 @@ else:
       print(' -> Port selection: ' + port.device + ' ' + port.manufacturer)
       selected_port = available_ports[int(selection) - 1]
       serSend_path = selected_port.device
-      ser = serial.Serial(serSend_path, 9600)
-      # serReturn_path = 'tty'.join(serSend_path.split('cu'))
-      # print('return path: ' + serReturn_path)
-      # serReturn = serial.Serial(serReturn_path, 9600)
+      ser = serial.Serial(serSend_path, 9600, timeout=1)
       print(' -> Serial port connection opened at 9600 baud')
       break
     else:
       print('Please enter a valid port number')
+
+# Create reader object based on serial port
+reader = ReadLine(ser)
 
 # Let users know how to quit
 print('\nPress escape key to exit at any time.   Press return to enter serial monitor.')
@@ -206,6 +253,7 @@ while True:
 screen = curses.initscr()
 
 curses.noecho()
+screen.nodelay(True)
 curses.cbreak()
 screen.keypad(True)
 
@@ -228,32 +276,37 @@ char_in = ''
 #                            #
 ##############################
 
-while True:
-  screen.clear()
+# If any errors occur, curses leaves a mess in the terminal.
+# If any exeptions happen, exit gracefully.
+try:
+  while True:
+    screen.clear()
 
-  # Get termianl dimensions
-  # Note that coordinates appear in the order y,x not x,y
-  dims = {'x': screen.getmaxyx()[1], 'y': screen.getmaxyx()[0]}
-  mid_y = math.floor(int(dims['y']/2))
+    # Get termianl dimensions
+    # Note that coordinates appear in the order y,x not x,y
+    dims = {'x': screen.getmaxyx()[1], 'y': screen.getmaxyx()[0]}
+    mid_y = math.floor(int(dims['y']/2))
 
-  draw_section_dividers()
+    draw_section_dividers()
 
-  # receive_message()
+    receive_message()
 
-  draw_received()
+    draw_received()
 
-  draw_sent()
+    draw_sent()
 
-  # Check for input characters
-  char_in = getch()
-  if char_in == 'ESC':
-    break
+    # Check for input characters
+    char_in = getch()
+    if char_in == 'ESC':
+      break
 
-  assemble_to_send(char_in)
+    assemble_to_send(char_in)
 
-  # Draw all changes to the screen
-  screen.refresh()
+    # Draw all changes to the screen
+    screen.refresh()
 
+except:
+  exit_gracefully()
 
 ##############################
 #                            #
@@ -261,12 +314,4 @@ while True:
 #                            #
 ##############################
 
-# Clear screen and exit
-screen.clear()
-
-curses.nocbreak()
-screen.keypad(0)
-curses.echo()
-
-screen.clear()
-curses.endwin()
+exit_gracefully()

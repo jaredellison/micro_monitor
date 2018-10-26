@@ -8,7 +8,7 @@
 
 import curses
 import math
-from getch import getch as get_one_character
+from getch import getch
 
 import serial
 from serial.tools import list_ports
@@ -22,7 +22,7 @@ from serial.tools import list_ports
 
 # Curses helper function from http://devcry.heiho.net/html/2016/20160228-curses-practices.html
 # This helps identify when escape key is pressed to exit the program
-def getch():
+def getch_curses():
   KEY_TABLE = {'0x1b': 'ESC'}
   '''Returns keystroke as string'''
 
@@ -122,13 +122,15 @@ def is_int(s):
       return False
 
 # Text is input to the script as a string, here we add a new line character
-# and endode it to binary and send it to the open serial port.
+# and encode it to binary and send it to the open serial port.
 def serial_out(string):
   string = string+'\n'
   ser.write(string.encode())
 
 def receive_message():
   global ser
+  # ser.in_waiting shows the number of bytes waiting to be read.
+  # We only want to read them if they exist, otherwise the program will hang.
   if ser.in_waiting:
     line = ser.readline()
     if line:
@@ -145,6 +147,7 @@ def exit_gracefully():
 
   screen.clear()
   curses.endwin()
+  exit()
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
@@ -189,7 +192,7 @@ else:
       print(' -> Port selection: ' + port.device + ' ' + port.manufacturer)
       selected_port = available_ports[int(selection) - 1]
       serSend_path = selected_port.device
-      ser = serial.Serial(serSend_path, 9600, timeout=1)
+      ser = serial.Serial(serSend_path, 9600, timeout=.1)
       print(' -> Serial port connection opened at 9600 baud')
       break
     else:
@@ -199,9 +202,9 @@ else:
 print('\nPress escape key to exit at any time.   Press return to enter serial monitor.')
 
 while True:
-  key_input = get_one_character()
+  key_input = getch()
   if ord(key_input) == 27:
-    exit()
+    exit_gracefully()
   else:
     break
 
@@ -257,7 +260,7 @@ try:
     draw_sent()
 
     # Check for input characters
-    char_in = getch()
+    char_in = getch_curses()
     if char_in == 'ESC':
       break
 

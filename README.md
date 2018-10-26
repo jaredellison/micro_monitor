@@ -115,3 +115,6 @@ void establishContact() {
   * [Sending data](https://stackoverflow.com/questions/32018993/how-can-i-send-a-byte-array-to-a-serial-port-using-python)
 * **Handling special characters in Curses** - *A very helpful function* - [The Developer's Cry Blog](http://devcry.heiho.net/html/2016/20160228-curses-practices.html)
 * **Alternative readline() implementation** - *This helps performance* - [User @skoehler's post](https://github.com/pyserial/pyserial/issues/216)
+* **Detecting the backspace key in Curses**
+  * [Detecting the backspace key in Mac OS terminals](https://stackoverflow.com/questions/47481955/python-curses-detecting-the-backspace-key?rq=1)
+  * [Detecting the backspace key in Ubuntu Xterm terminals](https://stackoverflow.com/questions/44943249/detecting-key-backspace-in-ncurses)

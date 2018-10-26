@@ -9,6 +9,7 @@
 import curses
 import math
 import time
+import os
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
@@ -66,6 +67,24 @@ def draw_received():
   for i, message in enumerate(printable_messages):
     screen.addstr(mid_y + 1 + i, 0, message)
 
+def assemble_to_send(char):
+  # char is the ascii code for a character
+  global sendString
+  global sentStrings
+  # New Line
+  # if char == 10:
+  if char in ('\n', 'Ctrl-J'):
+    sentStrings.append(sendString)
+    sendString = ''
+    return
+  # # Backspace
+  if char in ('KEY_BACKSPACE', '\b', '\x7f', '0x7f'):
+    sendString = sendString[0:-1]
+    return
+  # # Other characters
+  else:
+    sendString = sendString + char
+    return
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
@@ -105,8 +124,7 @@ curses.init_pair(1, curses.COLOR_BLUE, -1)
 received_buffer = ['received msg 1', 'received msg 2', 'received msg 3', 'received msg 4', 'received msg 5', 'received msg 6']
 
 # Press escape key to exit
-q = ''
-
+char_in = ''
 
 ##############################
 #                            #
@@ -127,9 +145,11 @@ while True:
   draw_received()
 
   # Check for input characters
-  charInput = getch()
-  if charInput == 'ESC':
+  char_in = getch()
+  if char_in == 'ESC':
     break
+
+  assemble_to_send(char_in)
 
   # Draw all changes to the screen
   screen.refresh()

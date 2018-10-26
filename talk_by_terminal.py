@@ -9,7 +9,6 @@
 import curses
 import math
 import time
-import os
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
@@ -34,7 +33,7 @@ def getch():
 
   elif key >= 1 and key <= 26:
     # Ctrl-A to Ctrl-Z
-    return 'Ctrl-' + ch(ord('@') + key)
+    return 'Ctrl-' + chr(ord('@') + key)
 
   # special key : use a lookup table
   skey = '0x%02x' % key
@@ -58,9 +57,10 @@ def draw_section_dividers():
   screen.addstr(mid_y, 0, receive_divider, curses.color_pair(1))
 
 def draw_received():
+  global mid_y
   # Draw messages received from serial port
   receive_area = {'start': int(dims['y']/2 + 1),
-                  'lines': dims['y'] - int(dims['y']/2 + 1)}
+                  'lines': dims['y'] - mid_y - 1}
 
   # Slice total received buffer down to the number of messages that can be displayed
   printable_messages = received_buffer[-receive_area['lines']:]
@@ -69,22 +69,43 @@ def draw_received():
 
 def assemble_to_send(char):
   # char is the ascii code for a character
-  global sendString
-  global sentStrings
+  global send_message
+  global sent_buffer
   # New Line
   # if char == 10:
   if char in ('\n', 'Ctrl-J'):
-    sentStrings.append(sendString)
-    sendString = ''
+    sent_buffer.append(send_message)
+    send_message = ''
     return
   # # Backspace
   if char in ('KEY_BACKSPACE', '\b', '\x7f', '0x7f'):
-    sendString = sendString[0:-1]
+    send_message = send_message[0:-1]
     return
   # # Other characters
-  else:
-    sendString = sendString + char
+  elif is_ascii(char):
+    send_message = send_message + char
     return
+
+def draw_sent():
+  global mid_y
+  # Draw messages received from serial port
+  send_area = {'start': 1,
+               'lines': dims['y'] - mid_y - 3}
+
+  # Slice total received buffer down to the number of messages that can be displayed
+  printable_messages = sent_buffer[-send_area['lines']:]
+  for i, message in enumerate(printable_messages):
+    screen.addstr(1 + i, 0, message)
+
+  # Print the blue colored cursor where new text input shows up
+  screen.addstr(len(printable_messages) + 1, 0, '>_ ', curses.color_pair(1))
+  # Print the new string we're assembling
+  screen.addstr(len(printable_messages) + 1, 3, send_message)
+  # Set cursor position to end of message being typed
+  screen.move(len(printable_messages) + 1, len(send_message) + 3)
+
+def is_ascii(c):
+    return len(c) == 1 and 31 < ord(c) < 128
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
@@ -94,8 +115,8 @@ def assemble_to_send(char):
 #                            #
 ##############################
 
-sendString = ''
-sentStrings = ['sent msg 1', 'sent msg 2', 'sent msg 3', 'sent msg 4']
+send_message = ''
+sent_buffer = ['sent msg 1', 'sent msg 2', 'sent msg 3', 'sent msg 4', 'sent msg 5', 'sent msg 6', 'sent msg 7', 'sent msg 8']
 inputLine = 0
 
 ##############################
@@ -143,6 +164,8 @@ while True:
   draw_section_dividers()
 
   draw_received()
+
+  draw_sent()
 
   # Check for input characters
   char_in = getch()

@@ -26,6 +26,13 @@ If you like the tool, you may want to make it executable and save an alias for i
 
 ### Opening a connection
 
+Navigate to the repository in your temrinal and run the script:
+
+```bash
+cd micro_monitor/
+python3 micro_monitor.py
+```
+
 micro_monitor first checks for available serial ports. Because printers and other devices often appear in this list, it only searches for devices which include "usb" in their name. If one port exists, it is selected by default, if multiple ports exist you may select the desired one.
 
 Connections are opened at a baudrate of 9600 by default.
@@ -54,7 +61,9 @@ The monitor window may be resized while the script runs. The most recently sent 
 
 ![micro_monitor_small](img/micro_monitor_small.png)
 
+Note that the Curses temporarily changes the way the terminal reacts. If micro_monitor doesn't exit gracefully you may find a mess of characters left on the screen and that text is not wrapping properly. To fix this, just type the terminal command `reset`. 
 
+You may also find that if you attempt to scroll in your terminal window, you no longer see the most recently rendered text output. In that case, press any key to get back into the terminal user interface.
 
 ## Trying it out
 

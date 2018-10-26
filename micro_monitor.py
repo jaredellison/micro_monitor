@@ -1,6 +1,7 @@
-#! /usr/bin/python
+#! /usr/local/bin/python3
+# -*- coding: utf-8 -*-
 '''
-    File name: talk_by_terminal.py
+    File name: micro_monitor.py
     Author: Jared Ellison
     Date created: Oct 2018
     Python Version: 3.7
@@ -158,9 +159,9 @@ def exit_gracefully():
 ##############################
 
 send_message = ''
-sent_buffer = ['sent msg 1', 'sent msg 2', 'sent msg 3', 'sent msg 4', 'sent msg 5', 'sent msg 6', 'sent msg 7', 'sent msg 8']
+sent_buffer = []
 inputLine = 0
-received_buffer = ['received msg 1', 'received msg 2', 'received msg 3', 'received msg 4', 'received msg 5', 'received msg 6']
+received_buffer = []
 
 ##############################
 #                            #
@@ -171,19 +172,21 @@ received_buffer = ['received msg 1', 'received msg 2', 'received msg 3', 'receiv
 # search for available usb serial ports
 available_ports = [e for e in list_ports.grep('usb')]
 
-# Print a list of available devices
-print('Please select a serial device:')
-for i, port in enumerate(available_ports):
-  print('   {}. {} {}'.format(i + 1, port.device, port.manufacturer))
-
-if len(available_ports) == 1:
-  print('Only one usb port available:')
+if len(available_ports) == 0:
+  print('No usb serial ports available, please check that devices are connected.')
+  exit()
+elif len(available_ports) == 1:
+  print('One usb port available:')
   selected_port = available_ports[0]
   serSend_path = selected_port.device
   ser = serial.Serial(serSend_path, 9600)
   print(' -> Port selection: ' + selected_port.device + ' ' + selected_port.manufacturer)
   print(' -> Serial port connection opened at 9600 baud')
 else:
+  print('Please select a serial device:')
+  # Print a list of available devices
+  for i, port in enumerate(available_ports):
+    print('   {}. {} {}'.format(i + 1, port.device, port.manufacturer))
   # Listen for a selection
   while True:
     selection = input('Port number: ')

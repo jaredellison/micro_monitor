@@ -194,6 +194,12 @@ received_buffer = []
 #                            #
 ##############################
 
+
+print(""" .       __   __   __            __         ___  __   __
+ |\\/| | /  ` |__) /  \\     |\\/| /  \\ |\\ | |  |  /  \\ |__)
+ |  | | \\__, |  \\ \\__/ ___ |  | \\__/ | \\| |  |  \\__/ |  \\
+                                                          """)
+
 # search for available usb serial ports
 available_ports = [e for e in list_ports.grep('usb')]
 
@@ -231,7 +237,7 @@ reader = ReadLine(ser)
 
 
 # Let users know how to quit
-print('\nPress escape key to exit at any time.   Press return to enter serial monitor.')
+print('\nPress escape key to exit at any time.\nPress return to enter serial monitor.')
 
 while True:
   key_input = getch()

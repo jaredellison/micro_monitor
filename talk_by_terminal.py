@@ -51,7 +51,25 @@ def resize_event():
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
+
+##############################
+#                            #
+#         Initialize         #
+#                            #
+##############################
+
 screen = curses.initscr()
+
+# Color Handling
+curses.start_color()
+curses.use_default_colors()
+
+# Set the input prompt cursor to blue
+# Init color pair is set with the arguments:
+#   id # starting at 1 (0 is the default)
+#   foreground color (-1 is the default color)
+#   background color (-1 is the default color)
+curses.init_pair(1, curses.COLOR_BLUE, -1)
 
 receivedBuffer = ['message 1', 'message 2', 'message 3', 'message 4', 'message 5', 'message 6']
 
@@ -68,22 +86,23 @@ q = ''
 while q != 'ESC':
   screen.clear()
 
+  # Get termianl dimensions
   # Note that coordinates appear in the order y,x not x,y
   dims = {'x': screen.getmaxyx()[1], 'y': screen.getmaxyx()[0]}
 
   # Create section dividers to separate the screen
-  send_divider = '◦ send:      ' + '▔' * (dims['x'] - 13)
-  receive_divider = '◦ receive:   ' + '▔' * (dims['x'] - 13)
+  send_divider = '◦ send:      ' + '─' * (dims['x'] - 13)
+  receive_divider = '◦ receive:   ' + '─' * (dims['x'] - 13)
   mid_y = math.floor(int(dims['y']/2))
-
-  screen.addstr(0, 0, send_divider)
-  screen.addstr(mid_y, 0, receive_divider)
+  screen.addstr(0, 0, send_divider, curses.color_pair(1))
+  screen.addstr(mid_y, 0, receive_divider, curses.color_pair(1))
 
   # Draw messages received from serial port
-  receiveArea = {'start': int(dims['y']/2 + 1), 'lines': dims['y'] - int(dims['y']/2 + 1)}
+  receive_area = {'start': int(dims['y']/2 + 1),
+                 'lines': dims['y'] - int(dims['y']/2 + 1)}
 
-  for i,line in enumerate(range(receiveArea['lines'])):
-    screen.addstr(receiveArea['start'] + i, 0, receivedBuffer[-(receiveArea['lines']):][0])
+  for i,line in enumerate(range(receive_area['lines'])):
+    screen.addstr(receive_area['start'] + i, 0, receivedBuffer[-(receive_area['lines']):][0])
 
   q = getch()
   screen.refresh()

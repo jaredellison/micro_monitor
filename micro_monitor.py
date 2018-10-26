@@ -84,8 +84,9 @@ def assemble_to_send(char):
     send_message = ''
     return
   # # Backspace
-  if char in ('KEY_BACKSPACE', '\b', '\x7f', '0x7f'):
+  if char in ('KEY_BACKSPACE', '\b', '\x7f', '0x7f', '0x107'):
     send_message = send_message[0:-1]
+
     return
   # # Other characters
   elif is_ascii(char):
@@ -127,16 +128,6 @@ def is_int(s):
 def serial_out(string):
   string = string+'\n'
   ser.write(string.encode())
-
-# def receive_message():
-#   global ser
-#   # ser.in_waiting shows the number of bytes waiting to be read.
-#   # We only want to read them if they exist, otherwise the program will hang.
-#   if ser.in_waiting:
-#     line = ser.readline()
-#     if line:
-#       received_buffer.append(line.decode('utf-8').strip())
-#   return
 
 def receive_message():
   global ser

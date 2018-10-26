@@ -44,6 +44,50 @@ The receive section displays the most recently received messages from the serial
 
 The monitor window may be resized while the script runs. The most recently sent and recieved messages are always displayed.
 
+## Trying it out
+
+Because micro_monitor.py requires something to communicate with, a good example program for a microcontroller will send data to its serial port and then accept, process and return messages. As an example I've been using a program that translates incoming strings to uppercase. If you have an Arduino compatible microcontroller, you can use the following code:
+
+```cpp
+int inByte = 0;         // incoming serial byte
+
+int i = 0;
+
+void setup() {
+  // start serial port at 9600 bps and wait for port to open:
+  Serial.begin(9600);
+  while (!Serial) {
+    ; // wait for serial port to connect. Needed for native USB port only
+  }
+  establishContact();  // send a byte to establish contact until receiver responds
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    // get incoming byte:
+    inByte = Serial.read();
+    if (inByte == 10) {
+      Serial.println();
+    }
+    else {
+      // Check if inByte is in the lowercase range
+      if (inByte >= 97 && inByte <= 122) {
+        inByte = inByte - 32;
+      }
+      Serial.write(inByte);
+      i++;
+    }
+  }
+}
+
+void establishContact() {
+  while (Serial.available() <= 0) {
+    Serial.println("Waiting for a byte..");   // send an initial string
+    delay(300);
+  }
+}
+```
+
 
 ## Acknowledgments and Resources
 
@@ -53,3 +97,4 @@ The monitor window may be resized while the script runs. The most recently sent 
   * [Receiving data](https://arduino.stackexchange.com/questions/19002/use-unix-terminal-instead-of-the-monitor-on-arduino-ide)
   * [Sending data](https://stackoverflow.com/questions/32018993/how-can-i-send-a-byte-array-to-a-serial-port-using-python)
 * **Handling special characters in Curses** - *A very helpful function* - [The Developer's Cry Blog](http://devcry.heiho.net/html/2016/20160228-curses-practices.html)
+

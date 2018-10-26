@@ -49,6 +49,24 @@ def resize_event():
     curses.resizeterm(y, x)
     screen.refresh()
 
+def draw_section_dividers():
+  # Create section dividers to separate the screen
+  send_divider = '◦ send:      ' + '─' * (dims['x'] - 13)
+  receive_divider = '◦ receive:   ' + '─' * (dims['x'] - 13)
+  screen.addstr(0, 0, send_divider, curses.color_pair(1))
+  screen.addstr(mid_y, 0, receive_divider, curses.color_pair(1))
+
+def draw_received():
+  # Draw messages received from serial port
+  receive_area = {'start': int(dims['y']/2 + 1),
+                  'lines': dims['y'] - int(dims['y']/2 + 1)}
+
+  # Slice total received buffer down to the number of messages that can be displayed
+  printable_messages = received_buffer[-receive_area['lines']:]
+  for i, message in enumerate(printable_messages):
+    screen.addstr(mid_y + 1 + i, 0, message)
+
+
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 
@@ -89,22 +107,11 @@ while q != 'ESC':
   # Get termianl dimensions
   # Note that coordinates appear in the order y,x not x,y
   dims = {'x': screen.getmaxyx()[1], 'y': screen.getmaxyx()[0]}
-
-  # Create section dividers to separate the screen
-  send_divider = '◦ send:      ' + '─' * (dims['x'] - 13)
-  receive_divider = '◦ receive:   ' + '─' * (dims['x'] - 13)
   mid_y = math.floor(int(dims['y']/2))
-  screen.addstr(0, 0, send_divider, curses.color_pair(1))
-  screen.addstr(mid_y, 0, receive_divider, curses.color_pair(1))
 
-  # Draw messages received from serial port
-  receive_area = {'start': int(dims['y']/2 + 1),
-                  'lines': dims['y'] - int(dims['y']/2 + 1)}
+  draw_section_dividers()
 
-  # It is only possible to print as many messages as there are lines on the screen
-  printable_messages = received_buffer[-receive_area['lines']:]
-  for i, message in enumerate(printable_messages):
-    screen.addstr(mid_y + 1 + i, 0, message)
+  draw_received()
 
   # Check for input characters
   q = getch()

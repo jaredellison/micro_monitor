@@ -22,7 +22,7 @@ If you like the tool, you may want to make it executable and save an alias for i
 
 ### Opening a connection
 
-Navigate to the repository in your temrinal and run the script:
+Navigate to the repository in your terminal and run the script. Note that on a Linux machine serial ports may be reserved for administrators, you may need to run the script with `sudo`.
 
 ```bash
 cd micro_monitor/

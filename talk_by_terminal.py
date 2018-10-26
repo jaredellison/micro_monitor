@@ -71,7 +71,7 @@ curses.use_default_colors()
 #   background color (-1 is the default color)
 curses.init_pair(1, curses.COLOR_BLUE, -1)
 
-receivedBuffer = ['message 1', 'message 2', 'message 3', 'message 4', 'message 5', 'message 6']
+received_buffer = ['message 1', 'message 2', 'message 3', 'message 4', 'message 5', 'message 6']
 
 # Press escape key to exit
 q = ''
@@ -99,12 +99,17 @@ while q != 'ESC':
 
   # Draw messages received from serial port
   receive_area = {'start': int(dims['y']/2 + 1),
-                 'lines': dims['y'] - int(dims['y']/2 + 1)}
+                  'lines': dims['y'] - int(dims['y']/2 + 1)}
 
-  for i,line in enumerate(range(receive_area['lines'])):
-    screen.addstr(receive_area['start'] + i, 0, receivedBuffer[-(receive_area['lines']):][0])
+  # It is only possible to print as many messages as there are lines on the screen
+  printable_messages = received_buffer[-receive_area['lines']:]
+  for i, message in enumerate(printable_messages):
+    screen.addstr(mid_y + 1 + i, 0, message)
 
+  # Check for input characters
   q = getch()
+
+  # Draw all changes to the screen
   screen.refresh()
 
 

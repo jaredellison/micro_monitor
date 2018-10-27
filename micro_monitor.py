@@ -20,6 +20,13 @@ from getch import getch
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 
+##############################
+#                            #
+#        Curses Helpers      #
+#                            #
+##############################
+
+
 # Curses helper function from:
 # http://devcry.heiho.net/html/2016/20160228-curses-practices.html
 # This helps identify when escape key is pressed to exit the program
@@ -56,24 +63,28 @@ def resize_event():
     screen.refresh()
 
 
-def draw_section_dividers(division_point, dimensions):
-    # Create section dividers to separate the screen
-    send_divider = '◦ send:      ' + '─' * (dimensions['x'] - 13)
-    receive_divider = '◦ receive:   ' + '─' * (dimensions['x'] - 13)
-    screen.addstr(0, 0, send_divider, curses.color_pair(1))
-    screen.addstr(division_point, 0, receive_divider, curses.color_pair(1))
+##############################
+#                            #
+#       Serial Helpers       #
+#                            #
+##############################
 
 
-def draw_received(division_point, dimensions):
-    # Draw messages received from serial port
-    receive_area = {'start': int(dimensions['y']/2 + 1),
-                    'lines': dimensions['y'] - division_point - 1}
+# Text is input to the script as a string, here we add a new line character
+# and encode it to binary and send it to the open serial port.
+def serial_out(serial_port, string):
+    string = string+'\n'
+    serial_port.write(string.encode())
 
-    # Slice total received buffer down to the number
-    # of messages that can be displayed
-    printable_messages = received_buffer[-receive_area['lines']:]
-    for i, message in enumerate(printable_messages):
-        screen.addstr(division_point + 1 + i, 0, message)
+
+def receive_message(serial_port):
+    # ser.in_waiting shows the number of bytes waiting to be read.
+    # We only want to read them if they exist, otherwise the program will hang.
+    if serial_port.in_waiting:
+        line = serial_port.readline()
+        if line:
+            received_buffer.append(line.decode('utf-8').strip())
+    return
 
 
 def assemble_to_send(serial_port, char, send_message, sent_buffer):
@@ -96,6 +107,35 @@ def assemble_to_send(serial_port, char, send_message, sent_buffer):
     return (send_message, sent_buffer)
 
 
+##############################
+#                            #
+#          Drawing           #
+#                            #
+##############################
+
+
+def draw_section_dividers(division_point, dimensions):
+    # Create section dividers to separate the screen
+    send_divider = '◦ send:      ' + '─' * (dimensions['x'] - 13)
+    receive_divider = '◦ receive:   ' + '─' * (dimensions['x'] - 13)
+    screen.addstr(0, 0, send_divider, curses.color_pair(1))
+    screen.addstr(division_point, 0, receive_divider, curses.color_pair(1))
+
+
+def draw_received(division_point, dimensions):
+    # Draw messages received from serial port
+    receive_area = {'start': int(dimensions['y']/2 + 1),
+                    'lines': dimensions['y'] - division_point - 1}
+
+    # Slice total received buffer down to the number
+    # of messages that can be displayed
+    printable_messages = received_buffer[-receive_area['lines']:]
+    for i, message in enumerate(printable_messages):
+        # if messages are too long to fit on screen, trim them
+        message = message[:dimensions['x']]
+        screen.addstr(division_point + 1 + i, 0, message)
+
+
 def draw_sent(division_point, dimensions, send_message):
     # Draw messages received from serial port
     send_area = {'start': 1,
@@ -105,6 +145,8 @@ def draw_sent(division_point, dimensions, send_message):
     # of messages that can be displayed
     printable_messages = sent_buffer[-send_area['lines']:]
     for i, message in enumerate(printable_messages):
+        # if messages are too long to fit on screen, trim them
+        message = message[:dimensions['x']]
         screen.addstr(1 + i, 0, message)
 
     # Print the blue colored cursor where new text input shows up
@@ -113,6 +155,13 @@ def draw_sent(division_point, dimensions, send_message):
     screen.addstr(len(printable_messages) + 1, 3, send_message)
     # Set cursor position to end of message being typed
     screen.move(len(printable_messages) + 1, len(send_message) + 3)
+
+
+##############################
+#                            #
+#          Tests             #
+#                            #
+##############################
 
 
 # Test a single character to see if it is ascii
@@ -127,36 +176,6 @@ def is_int(s):
         return True
     except ValueError:
         return False
-
-
-# Text is input to the script as a string, here we add a new line character
-# and encode it to binary and send it to the open serial port.
-def serial_out(serial_port, string):
-    string = string+'\n'
-    serial_port.write(string.encode())
-
-
-def receive_message(serial_port):
-    # ser.in_waiting shows the number of bytes waiting to be read.
-    # We only want to read them if they exist, otherwise the program will hang.
-    if serial_port.in_waiting:
-        line = serial_port.readline()
-        if line:
-            received_buffer.append(line.decode('utf-8').strip())
-    return
-
-
-def exit_gracefully(screen, curses, message=''):
-    # Clear screen and exit, possibly printing message
-    curses.nocbreak()
-    screen.keypad(0)
-    curses.echo()
-    curses.endwin()
-
-    if message:
-        print(message)
-
-    exit()
 
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -217,7 +236,7 @@ def open_serial_connection():
         key_input = getch()
         # Check if escape key is pressed
         if ord(key_input) == 27:
-            exit_gracefully()
+            exit()
         else:
             break
     return ser
@@ -267,6 +286,9 @@ def serial_monitor(serial_port, screen, sent_buffer,
             dims = {'x': screen.getmaxyx()[1], 'y': screen.getmaxyx()[0]}
             mid_y = math.floor(int(dims['y']/2))
 
+            if dims['y'] < 4 or dims['y'] < 8:
+                raise RuntimeError('Window too small for micro_monitor')
+
             draw_section_dividers(mid_y, dims)
 
             receive_message(serial_port)
@@ -290,7 +312,21 @@ def serial_monitor(serial_port, screen, sent_buffer,
 
     except Exception as e:
         message = 'Exiting with error: ' + str(e)
-        exit_gracefully(screen, curses, message = message)
+        exit_gracefully(screen, curses, message=message)
+
+
+def exit_gracefully(screen, curses, message=''):
+    # Clear screen and exit, possibly printing message
+    screen.clear()
+    curses.nocbreak()
+    screen.keypad(0)
+    curses.echo()
+    curses.endwin()
+
+    if message:
+        print(message)
+
+    exit()
 
 
 if __name__ == '__main__':
@@ -332,4 +368,4 @@ if __name__ == '__main__':
     #                            #
     ##############################
 
-    exit_gracefully()
+    exit_gracefully(screen, curses)

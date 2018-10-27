@@ -1,6 +1,10 @@
+![micro_monitor_title](/Users/lucky_bloop/programming/embedded/micro_monitor/img/micro_monitor_title.png)
+
 # micro_monitor.py
 
-This project is a command line serial monitor utility intended as a quick and lightweight alternative to the Arduino IDE's serial monitor.
+*A lightweight command line serial monitor for communicating with microcontrollers*
+
+This project was inspired by the Arduino IDE's serial monitor which is used to communicate with microcontrollers while developing and debugging code. It could be used to communciate with any device over a serial port but it is well suited for users of the Arduino and Teensy platforms.
 
 The project is built with Python 3, it uses the [pySerial library](https://github.com/pyserial/) to identify and communicate with serial ports, and it uses the python [Curses library](https://docs.python.org/3/library/curses.html#module-curses) to render a simple text based user interface in a terminal window.
 

@@ -171,8 +171,8 @@ class ReadLine:
                 self.buf.extend(data)
 
 
-def exit_gracefully():
-    # Clear screen and exit
+def exit_gracefully(message):
+    # Clear screen and exit, possibly printing message
     screen.clear()
 
     curses.nocbreak()
@@ -181,6 +181,10 @@ def exit_gracefully():
 
     screen.clear()
     curses.endwin()
+
+    if message:
+        print(message)
+
     exit()
 
 
@@ -331,8 +335,9 @@ try:
         # Draw all changes to the screen
         screen.refresh()
 
-except:
-    exit_gracefully()
+except OSError as e:
+    message = 'Exiting with error: ' + str(e)
+    exit_gracefully(message)
 
 ##############################
 #                            #

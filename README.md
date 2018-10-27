@@ -1,4 +1,4 @@
-![micro_monitor_title](/Users/lucky_bloop/programming/embedded/micro_monitor/img/micro_monitor_title.png)
+![micro_monitor_title](img/micro_monitor_title.png)
 
 # micro_monitor.py
 

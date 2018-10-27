@@ -136,42 +136,17 @@ def serial_out(string):
     ser.write(string.encode())
 
 
-def receive_message(serial_port, reader):
+def receive_message(serial_port):
     # ser.in_waiting shows the number of bytes waiting to be read.
     # We only want to read them if they exist, otherwise the program will hang.
     if serial_port.in_waiting:
-        line = reader.readline()
+        line = serial_port.readline()
         if line:
             received_buffer.append(line.decode('utf-8').strip())
     return
 
 
-# Alternative readline implementation from:
-# https://github.com/pyserial/pyserial/issues/216
-class ReadLine:
-    def __init__(self, s):
-        self.buf = bytearray()
-        self.s = s
-
-    def readline(self):
-        i = self.buf.find(b"\n")
-        if i >= 0:
-            r = self.buf[:i+1]
-            self.buf = self.buf[i+1:]
-            return r
-        while True:
-            i = max(1, min(2048, self.s.in_waiting))
-            data = self.s.read(i)
-            i = data.find(b"\n")
-            if i >= 0:
-                r = self.buf + data[:i+1]
-                self.buf[0:] = data[i+1:]
-                return r
-            else:
-                self.buf.extend(data)
-
-
-def exit_gracefully(message):
+def exit_gracefully(message=''):
     # Clear screen and exit, possibly printing message
     screen.clear()
 
@@ -249,9 +224,6 @@ else:
         else:
             print('Please enter a valid port number')
 
-# Create reader object using serial port
-reader = ReadLine(ser)
-
 
 # Let users know how to quit
 print('\nPress escape key to exit at any time.'
@@ -259,6 +231,7 @@ print('\nPress escape key to exit at any time.'
 
 while True:
     key_input = getch()
+    # Check if escape key is pressed
     if ord(key_input) == 27:
         exit_gracefully()
     else:
@@ -281,7 +254,7 @@ curses.noecho()
 # default. If the value is set too low, the script REALLY uses the CPU and
 # the screen may flicker but setting it lower does mean that incoming bytes
 # are displayed quicker.
-screen.timeout(125)
+screen.timeout(250)
 
 curses.cbreak()
 screen.keypad(True)
@@ -318,7 +291,7 @@ try:
 
         draw_section_dividers(mid_y)
 
-        receive_message(ser, reader)
+        receive_message(ser)
 
         draw_received(mid_y)
 

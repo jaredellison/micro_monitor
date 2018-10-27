@@ -148,13 +148,9 @@ def receive_message(serial_port):
 
 def exit_gracefully(message=''):
     # Clear screen and exit, possibly printing message
-    screen.clear()
-
     curses.nocbreak()
     screen.keypad(0)
     curses.echo()
-
-    screen.clear()
     curses.endwin()
 
     if message:

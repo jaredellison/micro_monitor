@@ -238,7 +238,7 @@ else:
         selection = input('Port number: ')
         # If it's a valid selection, open that port for communication
         if is_int(selection) \
-            and int(selection) in range(1, len(available_ports) + 1):
+           and int(selection) in range(1, len(available_ports) + 1):
             print(' -> Port selection: ' + port.device
                   + ' ' + port.manufacturer)
             selected_port = available_ports[int(selection) - 1]
@@ -329,8 +329,9 @@ try:
         if char_in == 'ESC':
             break
 
-        send_message, sent_buffer \
-        = assemble_to_send(char_in, send_message, sent_buffer)
+        send_message, sent_buffer = assemble_to_send(char_in,
+                                                     send_message,
+                                                     sent_buffer)
 
         # Draw all changes to the screen
         screen.refresh()

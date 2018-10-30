@@ -73,7 +73,7 @@ def resize_event():
 # Text is input to the script as a string, here we add a new line character
 # and encode it to binary and send it to the open serial port.
 def serial_out(serial_port, string):
-    string = string+'\n'
+    string = string + '\n'
     serial_port.write(string.encode())
 
 
@@ -90,7 +90,6 @@ def receive_message(serial_port):
 def assemble_to_send(serial_port, char, send_message, sent_buffer):
     # char is the ascii code for a character
     # New Line
-    # if char == 10:
     if char in ('\n', 'Ctrl-J'):
         serial_out(serial_port, send_message)
         sent_buffer.append(send_message)
@@ -116,46 +115,54 @@ def assemble_to_send(serial_port, char, send_message, sent_buffer):
 
 def draw_section_dividers(division_point, dimensions):
     # Create section dividers to separate the screen
-    send_divider = '◦ send:      ' + '─' * (dimensions['x'] - 13)
-    receive_divider = '◦ receive:   ' + '─' * (dimensions['x'] - 13)
+    send_label = '◦ send:      '
+    receive_label = '◦ receive:   '
+    send_divider = send_label + '─' * (dimensions['x'] - len(send_label))
+    receive_divider = receive_label + '─' * (dimensions['x'] - len(receive_label))
     screen.addstr(0, 0, send_divider, curses.color_pair(1))
     screen.addstr(division_point, 0, receive_divider, curses.color_pair(1))
 
 
-def draw_received(division_point, dimensions):
-    # Draw messages received from serial port
-    receive_area = {'start': int(dimensions['y']/2 + 1),
-                    'lines': dimensions['y'] - division_point - 1}
+def draw_sent(division_point, dimensions, sent_buffer):
+    send_area_lines = division_point - 2
 
-    # Slice total received buffer down to the number
+    # Slice total buffer down to the number
     # of messages that can be displayed
-    printable_messages = received_buffer[-receive_area['lines']:]
+    printable_messages = sent_buffer[-send_area_lines:]
+    for i, message in enumerate(printable_messages):
+        # if messages are too long to fit on screen, trim them
+        message = message[:dimensions['x']]
+        screen.addstr(1 + i, 0, message)
+
+    prompt_position = len(printable_messages) + 1
+    return prompt_position
+
+
+def draw_received(division_point, dimensions, received_buffer):
+    receive_area_lines = dimensions['y'] - division_point - 1
+
+    # Slice total buffer down to the number
+    # of messages that can be displayed
+    printable_messages = received_buffer[-receive_area_lines:]
     for i, message in enumerate(printable_messages):
         # if messages are too long to fit on screen, trim them
         message = message[:dimensions['x']]
         screen.addstr(division_point + 1 + i, 0, message)
 
 
-def draw_sent(division_point, dimensions, send_message):
-    # Draw messages received from serial port
-    send_area = {'start': 1,
-                 'lines': dimensions['y'] - division_point - 3}
-
-    # Slice total received buffer down to the number
-    # of messages that can be displayed
-    printable_messages = sent_buffer[-send_area['lines']:]
-    for i, message in enumerate(printable_messages):
-        # if messages are too long to fit on screen, trim them
-        message = message[:dimensions['x']]
-        screen.addstr(1 + i, 0, message)
-
+def draw_prompt(prompt_position, send_message):
+    prompt_str = '>_ '
+    prompt_length = len(prompt_str)
     # Print the blue colored cursor where new text input shows up
-    screen.addstr(len(printable_messages) + 1, 0, '>_ ', curses.color_pair(1))
+    screen.addstr(prompt_position, 0, prompt_str, curses.color_pair(1))
     # Print the new string we're assembling
-    screen.addstr(len(printable_messages) + 1, 3, send_message)
-    # Set cursor position to end of message being typed
-    screen.move(len(printable_messages) + 1, len(send_message) + 3)
+    screen.addstr(prompt_position, prompt_length, send_message)
+    return prompt_length
 
+
+def draw_cursor(prompt_position, prompt_length, send_message):
+    # Set cursor position to end of message being typed
+    screen.move(prompt_position, prompt_length + len(send_message))
 
 ##############################
 #                            #
@@ -293,9 +300,13 @@ def serial_monitor(serial_port, screen, sent_buffer,
 
             receive_message(serial_port)
 
-            draw_received(mid_y, dims)
+            draw_received(mid_y, dims, received_buffer)
 
-            draw_sent(mid_y, dims, send_message)
+            prompt_position = draw_sent(mid_y, dims, sent_buffer)
+
+            prompt_length = draw_prompt(prompt_position, send_message)
+
+            draw_cursor(prompt_position, prompt_length, send_message)
 
             # Check for input characters
             char_in = getch_curses()
@@ -333,7 +344,7 @@ if __name__ == '__main__':
 
     ##############################
     #                            #
-    #      Global Variables      #
+    #        Initialize          #
     #                            #
     ##############################
 

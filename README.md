@@ -6,7 +6,7 @@
 
 This project was inspired by the Arduino IDE's serial monitor which is useful while developing and debugging code on an external device like an Arduino or Teensy board.
 
-The project is built with Python 3, it uses the [pySerial library](https://github.com/pyserial/) to identify and communicate with serial ports, and it uses the python [Curses library](https://docs.python.org/3/library/curses.html#module-curses) to render a simple text based user interface in a terminal window.
+The project is built with Python 3, it uses the [pySerial library](https://github.com/pyserial/) to identify and communicate with serial ports, the python [Curses library](https://docs.python.org/3/library/curses.html#module-curses) to render a simple text based user interface in a terminal window and [Click](https://click.palletsprojects.com/en/7.x/) to provide a command line interface.
 
 This script has been tested using Mac OS and Linux but it may work for Windows as well.
 
@@ -14,10 +14,10 @@ This script has been tested using Mac OS and Linux but it may work for Windows a
 
 Python 3 and the pip package manager are required, if you don't have them, learn how to install them [here](https://docs.python-guide.org/starting/installation/).
 
-Before using micro_monitor, use pip install the dependences:
+Before using micro_monitor, use pip to install dependencies:
 
 ```bash
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 If you like the tool, you may want to make it executable and save an alias for it in your system.
@@ -109,11 +109,35 @@ void establishContact() {
 }
 ```
 
+## Command Line Options
+
+Several command line options are provided. For example, to open a connection with the baud rate of 19200 :
+
+```bash
+python3 micromonitor.py --baud_rate=19200
+```
+
+To see a full list of command line options, use the option `--help`
+
+```bash
+Options:
+  --baud_rate INTEGER  Baud rate, default is 9600bps.
+  --line_ending TEXT   Line ending for serial messages, options are: 'n': for
+                       \n, 'r': for \r, 'both': for \r\n. The default is 'n'.
+  --all_ports          Show all availble serial ports. By default only serial
+                       ports with "usb" in their path are shown.
+  --port TEXT          Select specific port number.
+  --monochrome         Black and white mode.
+  --help               Show this message and exit.
+```
+
+
 
 ## Acknowledgments and Resources
 
 * **pySerial**  - *Great documentation* - [pySerial Docs](https://pythonhosted.org/pyserial/)
 * **Python Curses Tutorial** - *A big picture introduction to Curses* - [Tutorial Videos](https://www.youtube.com/channel/UCXCA0fPu6uPjWv9p4uUrpEQ)
+* **Click** - *A tool for creating python command line interfaces* - [Click Docs](https://click.palletsprojects.com/en/7.x/)
 * **Basics of communicating with serial ports in unix**
   * [Receiving data](https://arduino.stackexchange.com/questions/19002/use-unix-terminal-instead-of-the-monitor-on-arduino-ide)
   * [Sending data](https://stackoverflow.com/questions/32018993/how-can-i-send-a-byte-array-to-a-serial-port-using-python)

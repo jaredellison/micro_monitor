@@ -445,8 +445,8 @@ class App():
               + ' default is \'n\'')
 @click.option('--all_ports', default=False, is_flag=True,
               help='Show all availble'
-              + 'serial ports. By default only serial ports with "usb" in '
-              + 'their path are shown.')
+              + ' serial ports. By default only serial ports with "usb" in'
+              + ' their path are shown.')
 @click.option('--port', default=None,
               help='Select specific port number, default is None.')
 def cli(baud_rate, monochrome, line_ending, all_ports, port):

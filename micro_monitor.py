@@ -46,6 +46,7 @@ def is_int(s):
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
+
 class App():
 
     ##############################
@@ -54,24 +55,34 @@ class App():
     #                            #
     ##############################
 
-    def __init__(self, baud_rate, monochrome, line_ending):
+    def __init__(self, baud_rate, monochrome, line_ending, all_ports):
         self.send_message = ''
         self.sent_buffer = []
         self.received_buffer = []
 
+        self.welcome()
+
         # Command Line Options
         self.baud_rate = baud_rate
         self.monochrome = monochrome
+        if monochrome:
+            print('Command line option: monochrome mode.')
         if line_ending == 'n':
             self.line_ending = '\n'
+            print('Command line option: line_ending = \\n')
         elif line_ending == 'r':
             self.line_ending = '\r'
+            print('Command line option: line_ending = \\r')
         elif line_ending == 'both':
             self.line_ending = '\r\n'
+            print('Command line option: line_ending = \\r\\n')
         else:
-            self.line_ending == '\n'
+            self.line_ending = '\n'
 
-        self.welcome()
+        self.all_ports = all_ports
+        if self.all_ports:
+            print('Command line option: showing all serial ports')
+
         self.serial_port = self.open_serial_connection(self.baud_rate)
         self.initilize_curses()
 
@@ -156,8 +167,12 @@ class App():
  |  | | \\__, |  \\ \\__/ ___ |  | \\__/ | \\| |  |  \\__/ |  \\\n""")
 
     def open_serial_connection(self, baud_rate):
-        # search for available usb serial ports
-        available_ports = [e for e in list_ports.grep('usb')]
+        # search for available serial ports
+        # limit results to devices containing the string 'usb' by default
+        if self.all_ports:
+            available_ports = list_ports.comports()
+        else:
+            available_ports = [e for e in list_ports.grep('usb')]
 
         if len(available_ports) == 0:
             print('No usb serial ports available, '
@@ -171,7 +186,7 @@ class App():
             print(' -> Port selection: ' + selected_port.device
                   + ' ' + selected_port.manufacturer)
             print(' -> Serial port connection opened at '
-                  + str(baud_rate) +'bps.')
+                  + str(baud_rate) + 'bps.')
         else:
             print('Please select a serial device:')
             # Print a list of available devices
@@ -194,8 +209,6 @@ class App():
                     break
                 else:
                     print('Please enter a valid port number')
-
-
 
         # Let users know how to quit
         print('\nPress escape key to exit at any time.'
@@ -304,11 +317,11 @@ class App():
         # We only want to read them if they exist, otherwise the program
         # will hang.
         if self.serial_port.in_waiting:
-            line = self.serial_port.read_until(self.line_ending.encode('utf-8'))
+            line = self.serial_port.read_until(
+                self.line_ending.encode('utf-8'))
             if line:
                 self.received_buffer.append(line.decode('utf-8').strip())
         return
-
 
     def assemble_to_send(self, char):
         # char is the ascii code for a character
@@ -390,8 +403,6 @@ class App():
         self.screen.addstr(self.dimensions['y'] - 1, 0,
                            'debug: ' + message, self.red_text)
 
-
-
 ##########################################
 #                                        #
 #         Command Line Interface         #
@@ -400,20 +411,24 @@ class App():
 
 
 @click.command()
-@click.option('--baud_rate', default=9600, help='Baud rate, default is 9600bps')
+@click.option('--baud_rate', default=9600,
+              help='Baud rate, default is 9600bps')
 @click.option('--monochrome', default=False, is_flag=True,
               help='Black and white mode')
-@click.option('--line_ending', default='n',
+@click.option('--line_ending', default='',
               help='Line ending for outgoing serial messages, options are:\n'
-                    + '\'n\': for \\n,'
-                    + ' \'r\': for \\r,'
-                    + ' \'both\': for \\r\\n,'
-                    + ' default is \'n\''
-                    )
-
-def cli(baud_rate, monochrome, line_ending):
-    app = App(baud_rate, monochrome, line_ending)
+              + '\'n\': for \\n,'
+              + ' \'r\': for \\r,'
+              + ' \'both\': for \\r\\n,'
+              + ' default is \'n\'')
+@click.option('--all_ports', default=False, is_flag=True,
+              help='Show all availble'
+              + 'serial ports. By default only serial ports with "usb" in '
+              + 'their path are shown.')
+def cli(baud_rate, monochrome, line_ending, all_ports):
+    app = App(baud_rate, monochrome, line_ending, all_ports)
     app.run()
+
 
 if __name__ == '__main__':
     cli()

@@ -326,57 +326,44 @@ def serial_monitor(serial_port, screen, sent_buffer,
         exit_gracefully(screen, curses, message=message)
 
 
-def exit_gracefully(screen, curses, message=''):
-    # Clear screen and exit, possibly printing message
-    screen.clear()
-    curses.nocbreak()
-    screen.keypad(0)
-    curses.echo()
-    curses.endwin()
 
-    if message:
-        print(message)
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
-    exit()
+#                     Main Class
+
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
+class App():
+    def __init__(self):
+        self.send_message = ''
+        self.sent_buffer = []
+        self.received_buffer = []
+
+        self.welcome()
+        self.serial_port = open_serial_connection()
+        self.screen = initilize_curses()
+
+    def run(self):
+        self.serial_monitor(serial_port, screen, sent_buffer,
+                       received_buffer, send_message)
+        self.exit_gracefully(screen, curses)
+
+    def exit_gracefully(self, message=''):
+        # Clear screen and exit, possibly printing message
+        self.screen.clear()
+        self.curses.nocbreak()
+        self.screen.keypad(0)
+        self.curses.echo()
+        self.curses.endwin()
+
+        if message:
+            print(message)
+
+        exit()
 
 
 if __name__ == '__main__':
+    app = App()
 
-    ##############################
-    #                            #
-    #        Initialize          #
-    #                            #
-    ##############################
+    app.run()
 
-    send_message = ''
-    sent_buffer = []
-    received_buffer = []
-
-    welcome()
-
-    serial_port = open_serial_connection()
-
-    ##############################
-    #                            #
-    #     Initialize Curses      #
-    #                            #
-    ##############################
-
-    screen = initilize_curses()
-
-    ##############################
-    #                            #
-    #         Main Loop          #
-    #                            #
-    ##############################
-
-    serial_monitor(serial_port, screen, sent_buffer,
-                   received_buffer, send_message)
-
-    ##############################
-    #                            #
-    #      Exit and Clean Up     #
-    #                            #
-    ##############################
-
-    exit_gracefully(screen, curses)

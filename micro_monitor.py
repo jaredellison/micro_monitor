@@ -361,6 +361,10 @@ class App():
         # Set cursor position to end of message being typed
         self.screen.move(self.prompt_position, self.prompt_length + len(self.send_message))
 
+    def draw_debug(self, message):
+        message = str(message)[:self.dimensions['x']]
+        self.screen.addstr(self.dimensions['y'] - 1, 0, 'debug: ' + message)
+
 
 if __name__ == '__main__':
     app = App()

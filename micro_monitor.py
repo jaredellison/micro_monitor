@@ -59,13 +59,12 @@ class App():
         self.received_buffer = []
 
         self.welcome()
-        self.serial_port = open_serial_connection()
-        self.screen = initilize_curses()
+        self.serial_port = self.open_serial_connection()
+        self.initilize_curses()
 
     def run(self):
-        self.serial_monitor(serial_port, screen, sent_buffer,
-                       received_buffer, send_message)
-        self.exit_gracefully(screen, curses)
+        self.serial_monitor()
+        self.exit()
 
     def exit(self, message=''):
         # Clear screen and exit, possibly printing message
@@ -86,18 +85,17 @@ class App():
     #                            #
     ##############################
 
-    def serial_monitor(self, serial_port, screen, sent_buffer,
-                       received_buffer, send_message):
+    def serial_monitor(self):
         # If any errors occur, curses leaves a mess in the terminal.
         # If any exeptions happen, exit gracefully.
-        try:
+        # try:
             while True:
                 self.screen.clear()
 
                 # Get termianl dimensions
                 # Note that coordinates appear in the order y,x not x,y
-                self.dimensions = {'x': screen.getmaxyx()[1], 'y': screen.getmaxyx()[0]}
-                self.division_point = math.floor(int(dims['y']/2))
+                self.dimensions = {'x': self.screen.getmaxyx()[1], 'y': self.screen.getmaxyx()[0]}
+                self.division_point = math.floor(int(self.dimensions['y']/2))
 
                 if self.dimensions['y'] < 4 or self.dimensions['y'] < 8:
                     raise RuntimeError('Window too small for micro_monitor')
@@ -115,18 +113,18 @@ class App():
                 self.draw_cursor()
 
                 # Check for input characters
-                char_in = self.getch_curses()
+                char_in = self.getch()
                 if char_in == 'ESC':
                     break
                 elif char_in:
                     self.assemble_to_send(char_in)
 
                 # Draw all changes to the screen
-                screen.refresh()
+                self.screen.refresh()
 
-        except Exception as e:
-            message = 'Exiting with error: ' + str(e)
-            self.exit(message)
+        # except Exception as e:
+        #     message = 'Exiting with error: ' + str(e)
+        #     self.exit(message)
 
 
 
@@ -136,14 +134,14 @@ class App():
     #                            #
     ##############################
 
-    def welcome():
+    def welcome(self):
          print("""
  .       __   __   __            __         ___  __   __
  |\\/| | /  ` |__) /  \\     |\\/| /  \\ |\\ | |  |  /  \\ |__)
  |  | | \\__, |  \\ \\__/ ___ |  | \\__/ | \\| |  |  \\__/ |  \\\n""")
 
 
-    def open_serial_connection():
+    def open_serial_connection(self):
         # search for available usb serial ports
         available_ports = [e for e in list_ports.grep('usb')]
 
@@ -194,8 +192,8 @@ class App():
         return ser
 
 
-    def initilize_curses():
-        screen = curses.initscr()
+    def initilize_curses(self):
+        self.screen = curses.initscr()
 
         # Don't show characters on the screen as they're typed. Characters are
         # shown using the assemble_to_send() function.
@@ -206,10 +204,10 @@ class App():
         # default. If the value is set too low, the script REALLY uses the CPU and
         # the screen may flicker but setting it lower does mean that incoming bytes
         # are displayed quicker.
-        screen.timeout(250)
+        self.screen.timeout(250)
 
         curses.cbreak()
-        screen.keypad(True)
+        self.screen.keypad(True)
 
         # Color Handling
         curses.start_color()
@@ -222,9 +220,7 @@ class App():
         #   background color (-1 is the default color)
         curses.init_pair(1, curses.COLOR_BLUE, -1)
 
-        self.blue_text = self.curses.color_pair(1)
-
-        return screen
+        self.blue_text = curses.color_pair(1)
 
     ##############################
     #                            #
@@ -322,8 +318,8 @@ class App():
         receive_label = '◦ receive:   '
         send_divider = send_label + '─' * (self.dimensions['x'] - len(send_label))
         receive_divider = receive_label + '─' * (self.dimensions['x'] - len(receive_label))
-        screen.addstr(0, 0, send_divider, self.blue_text)
-        screen.addstr(self.division_point, 0, receive_divider, self.blue_text)
+        self.screen.addstr(0, 0, send_divider, self.blue_text)
+        self.screen.addstr(self.division_point, 0, receive_divider, self.blue_text)
 
 
     def draw_sent(self):
@@ -334,7 +330,7 @@ class App():
         printable_messages = self.sent_buffer[-send_area_lines:]
         for i, message in enumerate(printable_messages):
             # if messages are too long to fit on screen, trim them
-            message = message[:dimensions['x']]
+            message = message[:self.dimensions['x']]
             self.screen.addstr(1 + i, 0, message)
 
         self.prompt_position = len(printable_messages) + 1
@@ -358,12 +354,12 @@ class App():
         # Print the blue colored cursor where new text input shows up
         self.screen.addstr(self.prompt_position, 0, prompt_str, self.blue_text)
         # Print the new string we're assembling
-        self.screen.addstr(self.prompt_position, prompt_length, self.send_message)
+        self.screen.addstr(self.prompt_position, self.prompt_length, self.send_message)
 
 
     def draw_cursor(self):
         # Set cursor position to end of message being typed
-        screen.move(self.prompt_position, self.prompt_length + len(self.send_message))
+        self.screen.move(self.prompt_position, self.prompt_length + len(self.send_message))
 
 
 if __name__ == '__main__':

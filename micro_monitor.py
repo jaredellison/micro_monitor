@@ -55,7 +55,12 @@ class App():
     #                            #
     ##############################
 
-    def __init__(self, baud_rate, monochrome, line_ending, all_ports, port):
+    def __init__(self,
+                 baud_rate,
+                 line_ending,
+                 all_ports,
+                 port,
+                 monochrome):
         self.send_message = ''
         self.sent_buffer = []
         self.received_buffer = []
@@ -435,22 +440,30 @@ class App():
 @click.command()
 @click.option('--baud_rate', default=9600,
               help='Baud rate, default is 9600bps.')
-@click.option('--monochrome', default=False, is_flag=True,
-              help='Black and white mode.')
 @click.option('--line_ending', default='',
-              help='Line ending for outgoing serial messages, options are:\n'
+              help='Line ending for serial messages, options are: '
               + '\'n\': for \\n,'
               + ' \'r\': for \\r,'
-              + ' \'both\': for \\r\\n,'
-              + ' default is \'n\'')
+              + ' \'both\': for \\r\\n.'
+              + ' The default is \'n\'.')
 @click.option('--all_ports', default=False, is_flag=True,
               help='Show all availble'
               + ' serial ports. By default only serial ports with "usb" in'
               + ' their path are shown.')
 @click.option('--port', default=None,
-              help='Select specific port number, default is None.')
-def cli(baud_rate, monochrome, line_ending, all_ports, port):
-    app = App(baud_rate, monochrome, line_ending, all_ports, port)
+              help='Select specific port number.')
+@click.option('--monochrome', default=False, is_flag=True,
+              help='Black and white mode.')
+def cli(baud_rate,
+        line_ending,
+        all_ports,
+        port,
+        monochrome):
+    app = App(baud_rate,
+              line_ending,
+              all_ports,
+              port,
+              monochrome)
     app.run()
 
 

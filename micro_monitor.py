@@ -20,48 +20,6 @@ from getch import getch
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 
-##############################
-#                            #
-#        Curses Helpers      #
-#                            #
-##############################
-
-
-# Curses helper function from:
-# http://devcry.heiho.net/html/2016/20160228-curses-practices.html
-# This helps identify when escape key is pressed to exit the program
-def getch_curses():
-    KEY_TABLE = {'0x1b': 'ESC'}
-    # Returns keystroke as string
-
-    key = screen.getch()
-
-    if key == curses.KEY_RESIZE:
-        resize_event()
-
-    elif ord(' ') <= key <= ord('~'):
-        # ascii key
-        return chr(key)
-
-    elif 1 <= key <= 26:
-        # Ctrl-A to Ctrl-Z
-        return 'Ctrl-' + chr(ord('@') + key)
-
-    # special key : use a lookup table
-    skey = '0x%02x' % key
-    if skey in KEY_TABLE:
-        return KEY_TABLE[skey]
-
-    # unknown key; just return as a hex string
-    return skey
-
-
-def resize_event():
-    y, x = screen.getmaxyx()
-    screen.clear()
-    curses.resizeterm(y, x)
-    screen.refresh()
-
 
 ##############################
 #                            #
@@ -191,94 +149,6 @@ def is_int(s):
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
-def welcome():
-    print(""" .       __   __   __            __         ___  __   __
- |\\/| | /  ` |__) /  \\     |\\/| /  \\ |\\ | |  |  /  \\ |__)
- |  | | \\__, |  \\ \\__/ ___ |  | \\__/ | \\| |  |  \\__/ |  \\
-                                                             """)
-
-
-def open_serial_connection():
-    # search for available usb serial ports
-    available_ports = [e for e in list_ports.grep('usb')]
-
-    if len(available_ports) == 0:
-        print('No usb serial ports available, '
-              + 'please check that devices are connected.')
-        exit()
-    elif len(available_ports) == 1:
-        print('One usb port available:')
-        selected_port = available_ports[0]
-        ser_send_path = selected_port.device
-        ser = serial.Serial(ser_send_path, 9600)
-        print(' -> Port selection: ' + selected_port.device
-              + ' ' + selected_port.manufacturer)
-        print(' -> Serial port connection opened at 9600 baud')
-    else:
-        print('Please select a serial device:')
-        # Print a list of available devices
-        for i, port in enumerate(available_ports):
-            print('   {}. {} {}'.format(i + 1, port.device, port.manufacturer))
-        # Listen for a selection
-        while True:
-            selection = input('Port number: ')
-            # If it's a valid selection, open that port for communication
-            if is_int(selection) \
-               and int(selection) in range(1, len(available_ports) + 1):
-                print(' -> Port selection: ' + port.device
-                      + ' ' + port.manufacturer)
-                selected_port = available_ports[int(selection) - 1]
-                ser_send_path = selected_port.device
-                ser = serial.Serial(ser_send_path, 9600, timeout=.1)
-                print(' -> Serial port connection opened at 9600 baud')
-                break
-            else:
-                print('Please enter a valid port number')
-
-    # Let users know how to quit
-    print('\nPress escape key to exit at any time.'
-          + '\nPress return to enter serial monitor.')
-
-    while True:
-        key_input = getch()
-        # Check if escape key is pressed
-        if ord(key_input) == 27:
-            exit()
-        else:
-            break
-    return ser
-
-
-def initilize_curses():
-    screen = curses.initscr()
-
-    # Don't show characters on the screen as they're typed. Characters are
-    # shown using the assemble_to_send() function.
-    curses.noecho()
-
-    # The function curses_getch() blocks the cpu waiting for input so it's
-    # important to set a timeout value for the screen. 250 Milliseconds is the
-    # default. If the value is set too low, the script REALLY uses the CPU and
-    # the screen may flicker but setting it lower does mean that incoming bytes
-    # are displayed quicker.
-    screen.timeout(250)
-
-    curses.cbreak()
-    screen.keypad(True)
-
-    # Color Handling
-    curses.start_color()
-    curses.use_default_colors()
-
-    # Set the input prompt cursor to blue
-    # Init color pair is set with the arguments:
-    #   id # starting at 1 (0 is the default)
-    #   foreground color (-1 is the default color)
-    #   background color (-1 is the default color)
-    curses.init_pair(1, curses.COLOR_BLUE, -1)
-
-    return screen
-
 
 def serial_monitor(serial_port, screen, sent_buffer,
                    received_buffer, send_message):
@@ -334,6 +204,13 @@ def serial_monitor(serial_port, screen, sent_buffer,
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 class App():
+
+    ##############################
+    #                            #
+    #         Core Methods       #
+    #                            #
+    ##############################
+
     def __init__(self):
         self.send_message = ''
         self.sent_buffer = []
@@ -348,18 +225,154 @@ class App():
                        received_buffer, send_message)
         self.exit_gracefully(screen, curses)
 
-    def exit_gracefully(self, message=''):
+    def exit(self, message=''):
         # Clear screen and exit, possibly printing message
         self.screen.clear()
-        self.curses.nocbreak()
-        self.screen.keypad(0)
-        self.curses.echo()
-        self.curses.endwin()
+        curses.nocbreak()
+        self.screen.keypad(False)
+        curses.echo()
+        curses.endwin()
 
         if message:
             print(message)
 
         exit()
+
+    ##############################
+    #                            #
+    #     Initialize Methods     #
+    #                            #
+    ##############################
+
+    def welcome():
+         print("""
+ .       __   __   __            __         ___  __   __
+ |\\/| | /  ` |__) /  \\     |\\/| /  \\ |\\ | |  |  /  \\ |__)
+ |  | | \\__, |  \\ \\__/ ___ |  | \\__/ | \\| |  |  \\__/ |  \\\n""")
+
+
+    def open_serial_connection():
+        # search for available usb serial ports
+        available_ports = [e for e in list_ports.grep('usb')]
+
+        if len(available_ports) == 0:
+            print('No usb serial ports available, '
+                  + 'please check that devices are connected.')
+            exit()
+        elif len(available_ports) == 1:
+            print('One usb port available:')
+            selected_port = available_ports[0]
+            ser_send_path = selected_port.device
+            ser = serial.Serial(ser_send_path, 9600)
+            print(' -> Port selection: ' + selected_port.device
+                  + ' ' + selected_port.manufacturer)
+            print(' -> Serial port connection opened at 9600 baud')
+        else:
+            print('Please select a serial device:')
+            # Print a list of available devices
+            for i, port in enumerate(available_ports):
+                print('   {}. {} {}'.format(i + 1, port.device, port.manufacturer))
+            # Listen for a selection
+            while True:
+                selection = input('Port number: ')
+                # If it's a valid selection, open that port for communication
+                if is_int(selection) \
+                   and int(selection) in range(1, len(available_ports) + 1):
+                    print(' -> Port selection: ' + port.device
+                          + ' ' + port.manufacturer)
+                    selected_port = available_ports[int(selection) - 1]
+                    ser_send_path = selected_port.device
+                    ser = serial.Serial(ser_send_path, 9600, timeout=.1)
+                    print(' -> Serial port connection opened at 9600 baud')
+                    break
+                else:
+                    print('Please enter a valid port number')
+
+        # Let users know how to quit
+        print('\nPress escape key to exit at any time.'
+              + '\nPress return to enter serial monitor.')
+
+        while True:
+            key_input = getch()
+            # Check if escape key is pressed
+            if ord(key_input) == 27:
+                exit()
+            else:
+                break
+        return ser
+
+
+    def initilize_curses():
+        screen = curses.initscr()
+
+        # Don't show characters on the screen as they're typed. Characters are
+        # shown using the assemble_to_send() function.
+        curses.noecho()
+
+        # The function curses_getch() blocks the cpu waiting for input so it's
+        # important to set a timeout value for the screen. 250 Milliseconds is the
+        # default. If the value is set too low, the script REALLY uses the CPU and
+        # the screen may flicker but setting it lower does mean that incoming bytes
+        # are displayed quicker.
+        screen.timeout(250)
+
+        curses.cbreak()
+        screen.keypad(True)
+
+        # Color Handling
+        curses.start_color()
+        curses.use_default_colors()
+
+        # Set the input prompt cursor to blue
+        # Init color pair is set with the arguments:
+        #   id # starting at 1 (0 is the default)
+        #   foreground color (-1 is the default color)
+        #   background color (-1 is the default color)
+        curses.init_pair(1, curses.COLOR_BLUE, -1)
+
+        return screen
+
+    ##############################
+    #                            #
+    #       Curses Methods       #
+    #                            #
+    ##############################
+
+    # Curses helper function from:
+    # http://devcry.heiho.net/html/2016/20160228-curses-practices.html
+    # This helps identify when escape key is pressed to exit the program
+    def getch_curses(self):
+        KEY_TABLE = {'0x1b': 'ESC'}
+        # Returns keystroke as string
+
+        key = self.screen.getch()
+
+        if key == curses.KEY_RESIZE:
+            resize_event()
+
+        elif ord(' ') <= key <= ord('~'):
+            # ascii key
+            return chr(key)
+
+        elif 1 <= key <= 26:
+            # Ctrl-A to Ctrl-Z
+            return 'Ctrl-' + chr(ord('@') + key)
+
+        # special key : use a lookup table
+        skey = '0x%02x' % key
+        if skey in KEY_TABLE:
+            return KEY_TABLE[skey]
+
+        # unknown key; just return as a hex string
+        return skey
+
+
+    def resize_event(self):
+        y, x = self.screen.getmaxyx()
+        self.screen.clear()
+        curses.resizeterm(y, x)
+        self.screen.refresh()
+
 
 
 if __name__ == '__main__':

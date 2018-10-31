@@ -37,7 +37,7 @@ def is_int(s):
     try:
         int(s)
         return True
-    except ValueError:
+    except (ValueError, TypeError):
         return False
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -55,7 +55,7 @@ class App():
     #                            #
     ##############################
 
-    def __init__(self, baud_rate, monochrome, line_ending, all_ports):
+    def __init__(self, baud_rate, monochrome, line_ending, all_ports, port):
         self.send_message = ''
         self.sent_buffer = []
         self.received_buffer = []
@@ -82,6 +82,10 @@ class App():
         self.all_ports = all_ports
         if self.all_ports:
             print('Command line option: showing all serial ports')
+
+        self.port = port
+        if is_int(port):
+            print('Command line option: port #' + self.port + ' selected')
 
         self.serial_port = self.open_serial_connection(self.baud_rate)
         self.initilize_curses()
@@ -174,41 +178,59 @@ class App():
         else:
             available_ports = [e for e in list_ports.grep('usb')]
 
-        if len(available_ports) == 0:
-            print('No usb serial ports available, '
-                  + 'please check that devices are connected.')
-            exit()
-        elif len(available_ports) == 1:
-            print('One usb port available:')
-            selected_port = available_ports[0]
-            ser_send_path = selected_port.device
-            ser = serial.Serial(ser_send_path, baud_rate, timeout=0.1)
-            print(' -> Port selection: ' + selected_port.device
-                  + ' ' + selected_port.manufacturer)
-            print(' -> Serial port connection opened at '
-                  + str(baud_rate) + 'bps.')
-        else:
-            print('Please select a serial device:')
-            # Print a list of available devices
-            for i, port in enumerate(available_ports):
-                print('   {}. {} {}'.format(i + 1,
-                                            port.device,
-                                            port.manufacturer))
-            # Listen for a selection
-            while True:
-                selection = input('Port number: ')
-                # If it's a valid selection, open that port for communication
-                if is_int(selection) \
-                   and int(selection) in range(1, len(available_ports) + 1):
-                    print(' -> Port selection: ' + port.device
-                          + ' ' + port.manufacturer)
-                    selected_port = available_ports[int(selection) - 1]
+        if self.port:
+            if is_int(self.port) and int(self.port) in range(1, len(available_ports) + 1):
+                    # If it's a valid selection,
+                    # open that port for communication
+                    selected_port = available_ports[int(self.port) - 1]
                     ser_send_path = selected_port.device
                     ser = serial.Serial(ser_send_path, baud_rate, timeout=0.1)
-                    print(' -> Serial port connection opened at 9600 baud')
-                    break
-                else:
-                    print('Please enter a valid port number')
+                    print(' -> Port selection: ' + selected_port.device
+                          + ' ' + selected_port.manufacturer)
+                    print(' -> Serial port connection opened at '
+                          + str(baud_rate) + 'bps.')
+            else:
+                print('Please enter a valid port number')
+                exit()
+
+        else:
+            if len(available_ports) == 0:
+                print('No usb serial ports available, '
+                      + 'please check that devices are connected.')
+                exit()
+            elif len(available_ports) == 1:
+                print('One usb port available:')
+                selected_port = available_ports[0]
+                ser_send_path = selected_port.device
+                ser = serial.Serial(ser_send_path, baud_rate, timeout=0.1)
+                print(' -> Port selection: ' + selected_port.device
+                      + ' ' + selected_port.manufacturer)
+                print(' -> Serial port connection opened at '
+                      + str(baud_rate) + 'bps.')
+            else:
+                print('Please select a serial device:')
+                # Print a list of available devices
+                for i, port in enumerate(available_ports):
+                    print('   {}. {} {}'.format(i + 1,
+                                                port.device,
+                                                port.manufacturer))
+                # Listen for a selection
+                while True:
+                    selection = input('Port number: ')
+                    # If it's a valid selection,
+                    # open that port for communication
+                    if is_int(selection) and int(selection) in range(1, len(available_ports) + 1):
+                        print(' -> Port selection: ' + port.device
+                              + ' ' + port.manufacturer)
+                        selected_port = available_ports[int(selection) - 1]
+                        ser_send_path = selected_port.device
+                        ser = serial.Serial(ser_send_path, baud_rate,
+                                            timeout=0.1)
+                        print(' -> Serial port connection opened at '
+                              + str(baud_rate) + 'bps.')
+                        break
+                    else:
+                        print('Please enter a valid port number')
 
         # Let users know how to quit
         print('\nPress escape key to exit at any time.'
@@ -412,9 +434,9 @@ class App():
 
 @click.command()
 @click.option('--baud_rate', default=9600,
-              help='Baud rate, default is 9600bps')
+              help='Baud rate, default is 9600bps.')
 @click.option('--monochrome', default=False, is_flag=True,
-              help='Black and white mode')
+              help='Black and white mode.')
 @click.option('--line_ending', default='',
               help='Line ending for outgoing serial messages, options are:\n'
               + '\'n\': for \\n,'
@@ -425,8 +447,10 @@ class App():
               help='Show all availble'
               + 'serial ports. By default only serial ports with "usb" in '
               + 'their path are shown.')
-def cli(baud_rate, monochrome, line_ending, all_ports):
-    app = App(baud_rate, monochrome, line_ending, all_ports)
+@click.option('--port', default=None,
+              help='Select specific port number, default is None.')
+def cli(baud_rate, monochrome, line_ending, all_ports, port):
+    app = App(baud_rate, monochrome, line_ending, all_ports, port)
     app.run()
 
 

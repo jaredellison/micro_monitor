@@ -45,6 +45,7 @@ def is_int(s):
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
+
 class App():
 
     ##############################
@@ -88,13 +89,14 @@ class App():
     def serial_monitor(self):
         # If any errors occur, curses leaves a mess in the terminal.
         # If any exeptions happen, exit gracefully.
-        # try:
+        try:
             while True:
                 self.screen.clear()
 
                 # Get termianl dimensions
                 # Note that coordinates appear in the order y,x not x,y
-                self.dimensions = {'x': self.screen.getmaxyx()[1], 'y': self.screen.getmaxyx()[0]}
+                self.dimensions = {'x': self.screen.getmaxyx()[1],
+                                   'y': self.screen.getmaxyx()[0]}
                 self.division_point = math.floor(int(self.dimensions['y']/2))
 
                 if self.dimensions['y'] < 4 or self.dimensions['y'] < 8:
@@ -110,6 +112,8 @@ class App():
 
                 self.draw_prompt()
 
+                self.draw_debug('abcdefg!')
+
                 self.draw_cursor()
 
                 # Check for input characters
@@ -122,11 +126,9 @@ class App():
                 # Draw all changes to the screen
                 self.screen.refresh()
 
-        # except Exception as e:
-        #     message = 'Exiting with error: ' + str(e)
-        #     self.exit(message)
-
-
+        except Exception as e:
+            message = 'Exiting with error: ' + str(e)
+            self.exit(message)
 
     ##############################
     #                            #
@@ -135,11 +137,10 @@ class App():
     ##############################
 
     def welcome(self):
-         print("""
+        print("""
  .       __   __   __            __         ___  __   __
  |\\/| | /  ` |__) /  \\     |\\/| /  \\ |\\ | |  |  /  \\ |__)
  |  | | \\__, |  \\ \\__/ ___ |  | \\__/ | \\| |  |  \\__/ |  \\\n""")
-
 
     def open_serial_connection(self):
         # search for available usb serial ports
@@ -161,7 +162,9 @@ class App():
             print('Please select a serial device:')
             # Print a list of available devices
             for i, port in enumerate(available_ports):
-                print('   {}. {} {}'.format(i + 1, port.device, port.manufacturer))
+                print('   {}. {} {}'.format(i + 1,
+                                            port.device,
+                                            port.manufacturer))
             # Listen for a selection
             while True:
                 selection = input('Port number: ')
@@ -191,7 +194,6 @@ class App():
                 break
         return ser
 
-
     def initilize_curses(self):
         self.screen = curses.initscr()
 
@@ -200,10 +202,10 @@ class App():
         curses.noecho()
 
         # The function curses_getch() blocks the cpu waiting for input so it's
-        # important to set a timeout value for the screen. 250 Milliseconds is the
-        # default. If the value is set too low, the script REALLY uses the CPU and
-        # the screen may flicker but setting it lower does mean that incoming bytes
-        # are displayed quicker.
+        # important to set a timeout value for the screen. 250 Milliseconds is
+        # the default. If the value is set too low, the script REALLY uses the
+        # CPU and the screen may flicker but setting it lower does mean that
+        # incoming bytes are displayed quicker.
         self.screen.timeout(250)
 
         curses.cbreak()
@@ -238,7 +240,7 @@ class App():
         key = self.screen.getch()
 
         if key == curses.KEY_RESIZE:
-            resize_event()
+            self.resize_event()
 
         elif ord(' ') <= key <= ord('~'):
             # ascii key
@@ -256,13 +258,11 @@ class App():
         # unknown key; just return as a hex string
         return skey
 
-
     def resize_event(self):
         y, x = self.screen.getmaxyx()
         self.screen.clear()
         curses.resizeterm(y, x)
         self.screen.refresh()
-
 
     ##############################
     #                            #
@@ -270,23 +270,21 @@ class App():
     #                            #
     ##############################
 
-
     # Text is input to the script as a string, here we add a new line character
     # and encode it to binary and send it to the open serial port.
     def serial_out(self, string):
         string = string + '\n'
         self.serial_port.write(string.encode())
 
-
     def receive_message(self):
         # ser.in_waiting shows the number of bytes waiting to be read.
-        # We only want to read them if they exist, otherwise the program will hang.
+        # We only want to read them if they exist, otherwise the program
+        # will hang.
         if self.serial_port.in_waiting:
             line = self.serial_port.readline()
             if line:
                 self.received_buffer.append(line.decode('utf-8').strip())
         return
-
 
     def assemble_to_send(self, char):
         # char is the ascii code for a character
@@ -316,11 +314,13 @@ class App():
         # Create section dividers to separate the screen
         send_label = '◦ send:      '
         receive_label = '◦ receive:   '
-        send_divider = send_label + '─' * (self.dimensions['x'] - len(send_label))
-        receive_divider = receive_label + '─' * (self.dimensions['x'] - len(receive_label))
+        send_divider = send_label \
+            + '─' * (self.dimensions['x'] - len(send_label))
+        receive_divider = receive_label \
+            + '─' * (self.dimensions['x'] - len(receive_label))
         self.screen.addstr(0, 0, send_divider, self.blue_text)
-        self.screen.addstr(self.division_point, 0, receive_divider, self.blue_text)
-
+        self.screen.addstr(self.division_point, 0,
+                           receive_divider, self.blue_text)
 
     def draw_sent(self):
         send_area_lines = self.division_point - 2
@@ -335,7 +335,6 @@ class App():
 
         self.prompt_position = len(printable_messages) + 1
 
-
     def draw_received(self):
         receive_area_lines = self.dimensions['y'] - self.division_point - 1
 
@@ -347,19 +346,20 @@ class App():
             message = message[:self.dimensions['x']]
             self.screen.addstr(self.division_point + 1 + i, 0, message)
 
-
     def draw_prompt(self):
         prompt_str = '>_ '
         self.prompt_length = len(prompt_str)
         # Print the blue colored cursor where new text input shows up
         self.screen.addstr(self.prompt_position, 0, prompt_str, self.blue_text)
         # Print the new string we're assembling
-        self.screen.addstr(self.prompt_position, self.prompt_length, self.send_message)
-
+        self.screen.addstr(self.prompt_position,
+                           self.prompt_length,
+                           self.send_message)
 
     def draw_cursor(self):
         # Set cursor position to end of message being typed
-        self.screen.move(self.prompt_position, self.prompt_length + len(self.send_message))
+        self.screen.move(self.prompt_position,
+                         self.prompt_length + len(self.send_message))
 
     def draw_debug(self, message):
         message = str(message)[:self.dimensions['x']]
@@ -370,4 +370,3 @@ if __name__ == '__main__':
     app = App()
 
     app.run()
-

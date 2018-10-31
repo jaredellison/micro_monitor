@@ -112,7 +112,8 @@ class App():
 
                 self.draw_prompt()
 
-                self.draw_debug('abcdefg!')
+                # Uncomment and pass a string for debugging
+                # self.draw_debug()
 
                 self.draw_cursor()
 
@@ -221,8 +222,10 @@ class App():
         #   foreground color (-1 is the default color)
         #   background color (-1 is the default color)
         curses.init_pair(1, curses.COLOR_BLUE, -1)
+        curses.init_pair(2, curses.COLOR_RED, -1)
 
         self.blue_text = curses.color_pair(1)
+        self.red_text = curses.color_pair(2)
 
     ##############################
     #                            #
@@ -363,7 +366,8 @@ class App():
 
     def draw_debug(self, message):
         message = str(message)[:self.dimensions['x']]
-        self.screen.addstr(self.dimensions['y'] - 1, 0, 'debug: ' + message)
+        self.screen.addstr(self.dimensions['y'] - 1, 0,
+                           'debug: ' + message, self.red_text)
 
 
 if __name__ == '__main__':

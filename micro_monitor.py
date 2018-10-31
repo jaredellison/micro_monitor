@@ -12,6 +12,7 @@ import math
 import serial
 from serial.tools import list_ports
 from getch import getch
+import click
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
@@ -45,7 +46,6 @@ def is_int(s):
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
-
 class App():
 
     ##############################
@@ -54,13 +54,25 @@ class App():
     #                            #
     ##############################
 
-    def __init__(self):
+    def __init__(self, baud_rate, monochrome, line_ending):
         self.send_message = ''
         self.sent_buffer = []
         self.received_buffer = []
 
+        # Command Line Options
+        self.baud_rate = baud_rate
+        self.monochrome = monochrome
+        if line_ending == 'n':
+            self.line_ending = '\n'
+        elif line_ending == 'r':
+            self.line_ending = '\r'
+        elif line_ending == 'both':
+            self.line_ending = '\r\n'
+        else:
+            self.line_ending == '\n'
+
         self.welcome()
-        self.serial_port = self.open_serial_connection()
+        self.serial_port = self.open_serial_connection(self.baud_rate)
         self.initilize_curses()
 
     def run(self):
@@ -143,7 +155,7 @@ class App():
  |\\/| | /  ` |__) /  \\     |\\/| /  \\ |\\ | |  |  /  \\ |__)
  |  | | \\__, |  \\ \\__/ ___ |  | \\__/ | \\| |  |  \\__/ |  \\\n""")
 
-    def open_serial_connection(self):
+    def open_serial_connection(self, baud_rate):
         # search for available usb serial ports
         available_ports = [e for e in list_ports.grep('usb')]
 
@@ -155,10 +167,11 @@ class App():
             print('One usb port available:')
             selected_port = available_ports[0]
             ser_send_path = selected_port.device
-            ser = serial.Serial(ser_send_path, 9600)
+            ser = serial.Serial(ser_send_path, baud_rate, timeout=0.1)
             print(' -> Port selection: ' + selected_port.device
                   + ' ' + selected_port.manufacturer)
-            print(' -> Serial port connection opened at 9600 baud')
+            print(' -> Serial port connection opened at '
+                  + str(baud_rate) +'bps.')
         else:
             print('Please select a serial device:')
             # Print a list of available devices
@@ -176,11 +189,13 @@ class App():
                           + ' ' + port.manufacturer)
                     selected_port = available_ports[int(selection) - 1]
                     ser_send_path = selected_port.device
-                    ser = serial.Serial(ser_send_path, 9600, timeout=.1)
+                    ser = serial.Serial(ser_send_path, baud_rate, timeout=0.1)
                     print(' -> Serial port connection opened at 9600 baud')
                     break
                 else:
                     print('Please enter a valid port number')
+
+
 
         # Let users know how to quit
         print('\nPress escape key to exit at any time.'
@@ -226,6 +241,11 @@ class App():
 
         self.blue_text = curses.color_pair(1)
         self.red_text = curses.color_pair(2)
+
+        # If monochrome mode is enable, set all colors to defaults
+        if self.monochrome:
+            self.blue_text = curses.color_pair(0)
+            self.red_text = curses.color_pair(0)
 
     ##############################
     #                            #
@@ -276,7 +296,7 @@ class App():
     # Text is input to the script as a string, here we add a new line character
     # and encode it to binary and send it to the open serial port.
     def serial_out(self, string):
-        string = string + '\n'
+        string = string + self.line_ending
         self.serial_port.write(string.encode())
 
     def receive_message(self):
@@ -284,10 +304,11 @@ class App():
         # We only want to read them if they exist, otherwise the program
         # will hang.
         if self.serial_port.in_waiting:
-            line = self.serial_port.readline()
+            line = self.serial_port.read_until(self.line_ending.encode('utf-8'))
             if line:
                 self.received_buffer.append(line.decode('utf-8').strip())
         return
+
 
     def assemble_to_send(self, char):
         # char is the ascii code for a character
@@ -370,7 +391,29 @@ class App():
                            'debug: ' + message, self.red_text)
 
 
-if __name__ == '__main__':
-    app = App()
 
+##########################################
+#                                        #
+#         Command Line Interface         #
+#                                        #
+##########################################
+
+
+@click.command()
+@click.option('--baud_rate', default=9600, help='Baud rate, default is 9600bps')
+@click.option('--monochrome', default=False, is_flag=True,
+              help='Black and white mode')
+@click.option('--line_ending', default='n',
+              help='Line ending for outgoing serial messages, options are:\n'
+                    + '\'n\': for \\n,'
+                    + ' \'r\': for \\r,'
+                    + ' \'both\': for \\r\\n,'
+                    + ' default is \'n\''
+                    )
+
+def cli(baud_rate, monochrome, line_ending):
+    app = App(baud_rate, monochrome, line_ending)
     app.run()
+
+if __name__ == '__main__':
+    cli()

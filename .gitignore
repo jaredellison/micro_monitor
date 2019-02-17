@@ -1,3 +1,6 @@
 __pycache__/
 venv/
 notes.md
+
+# Mac OS
+.DS_Store

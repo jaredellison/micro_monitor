@@ -13,6 +13,8 @@ import serial
 from serial.tools import list_ports
 from getch import getch
 import click
+import signal
+import sys
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
@@ -110,7 +112,7 @@ class App():
         if message:
             print(message)
 
-        exit()
+        sys.exit()
 
     ##############################
     #                            #
@@ -196,13 +198,13 @@ class App():
                           + str(baud_rate) + 'bps.')
             else:
                 print('Please enter a valid port number')
-                exit()
+                sys.exit()
 
         else:
             if len(available_ports) == 0:
                 print('No usb serial ports available, '
                       + 'please check that devices are connected.')
-                exit()
+                sys.exit()
             elif len(available_ports) == 1:
                 print('One usb port available:')
                 selected_port = available_ports[0]
@@ -245,7 +247,7 @@ class App():
             key_input = getch()
             # Check if escape key is pressed
             if ord(key_input) == 27:
-                exit()
+                sys.exit()
             else:
                 break
         return ser
@@ -464,6 +466,12 @@ def cli(baud_rate,
               all_ports,
               port,
               monochrome)
+
+    # Listen for ctrl-c and exit gracefuly
+    def closeHandler(sig_number, frame):
+        app.exit()
+    signal.signal(signal.SIGINT, closeHandler)
+
     app.run()
 
 
